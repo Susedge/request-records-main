@@ -8,8 +8,12 @@ from datetime import datetime
 import io
 import tempfile
 from django.utils.text import slugify
-import pythoncom
-from docx2pdf import convert  # You'll need to pip install docx2pdf
+from docx2python import docx2python
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
 
 def admin_reports(request):
     templates = ReportTemplate.objects.all()
@@ -77,10 +81,27 @@ def admin_generate_report_pdf(request, template_id):
         # Handle PDF conversion if needed
         if output_format == 'pdf':
             pdf_path = os.path.join(generated_dir, f"{safe_name}.pdf")
-            # Initialize COM for PDF conversion
-            pythoncom.CoInitialize()
-            # Convert DOCX to PDF
-            convert(docx_path, pdf_path)
+            
+            # Extract text content from DOCX
+            doc_content = docx2python(docx_path)
+            
+            # Create PDF
+            doc = SimpleDocTemplate(pdf_path, pagesize=letter)
+            styles = getSampleStyleSheet()
+            flowables = []
+            
+            # Process content and add to PDF
+            for table in doc_content.body:
+                for row in table:
+                    for cell in row:
+                        for paragraph in cell:
+                            if paragraph:
+                                p = Paragraph(paragraph, styles['Normal'])
+                                flowables.append(p)
+                                flowables.append(Spacer(1, 0.2 * inch))
+            
+            # Build the PDF document
+            doc.build(flowables)
             
             # Serve the PDF
             output_filename = f"{safe_name}.pdf"
