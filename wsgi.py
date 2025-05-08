@@ -9,5 +9,5 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'record
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'records.records.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'records.settings')
 application = get_wsgi_application()
