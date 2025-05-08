@@ -1,12 +1,17 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import FileResponse, Http404
-from docx2pdf import convert
 from docx import Document
 import os
-import pythoncom
 from django.conf import settings
 from ..models import Profile, ReportTemplate, Purpose
 from datetime import datetime
+
+# Import alternative libraries for PDF conversion
+from docx2python import docx2python
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
 
 def index(request):
     templates = ReportTemplate.objects.all()
@@ -14,8 +19,6 @@ def index(request):
     return render(request, 'user/reports.html', {'templates': templates, 'purposes': purposes})
 
 def generate_pdf(request, template_id):
-    pythoncom.CoInitialize()
-
     # Get template and user profile
     purpose_id = request.GET.get('purpose')
     if not purpose_id:
@@ -72,9 +75,30 @@ def generate_pdf(request, template_id):
                             if placeholder in paragraph.text:
                                 paragraph.text = paragraph.text.replace(placeholder, field_value)
         
-        # Save and convert
+        # Save DOCX file
         doc.save(docx_path)
-        convert(docx_path, pdf_path)
+        
+        # Convert to PDF using platform-independent method
+        # New PDF conversion method that doesn't use pythoncom
+        doc_content = docx2python(docx_path)
+        
+        # Create PDF
+        pdf_doc = SimpleDocTemplate(pdf_path, pagesize=letter)
+        styles = getSampleStyleSheet()
+        flowables = []
+        
+        # Process content and add to PDF
+        for table in doc_content.body:
+            for row in table:
+                for cell in row:
+                    for paragraph in cell:
+                        if paragraph:
+                            p = Paragraph(paragraph, styles['Normal'])
+                            flowables.append(p)
+                            flowables.append(Spacer(1, 0.2 * inch))
+        
+        # Build the PDF document
+        pdf_doc.build(flowables)
         
         # Clean up DOCX
         if os.path.exists(docx_path):
