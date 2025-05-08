@@ -15,7 +15,7 @@ SECRET_KEY = 'django-insecure-+l_auu##_g=um5g$tf5jpi0+2$q=zri4%!d4pq^komcmp($%37
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'request-records-lgyv.onrender.com',
+    'request-records-main.onrender.com',
     'localhost',
     '127.0.0.1',
     ]
