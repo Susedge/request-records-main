@@ -1,0 +1,199 @@
+<!-- user_number = models.CharField(max_length=10)
+first_name = models.CharField(max_length=64)
+last_name = models.CharField(max_length=64)
+course_code = models.CharField(max_length=5)
+middle_name = models.CharField(max_length=64, default='De Guz Man')
+contact_no = models.IntegerField(default='09667614313')
+entry_year_from = models.DateField()
+entry_year_to = models.DateField()
+
+ -->
+ <!DOCTYPE html>
+
+ <html>
+     <head>
+         <meta charset="utf-8">
+         <meta http-equiv="X-UA-Compatible" content="IE=edge">
+         <title></title>
+         <meta name="description" content="">
+         <meta name="viewport" content="width=device-width, initial-scale=1">
+         <link rel="stylesheet" href="">
+ 
+         {% include 'header.html' %}
+     </head>
+     <body class="sb-nav-fixed">
+
+        {% include 'user/user-topnav.html' %}
+         <div id="layoutSidenav">
+             
+             
+             {% include 'user/user-sidenav.html' %}
+ 
+             <div id="layoutSidenav_content">
+                <main class="card mt-3 mx-3 p-3 w-50">
+                <div class="mb-3">
+                    <label for="first_name" class="form-label">First Name</label>
+                    <input type="text" class="form-control" id="first_name" name="first_name"
+                        value="{{ profile.first_name }}" disabled>
+                </div>
+                <div class="mb-3">
+                    <label for="middle_name" class="form-label">Middle Name</label>
+                    <input type="text" class="form-control" id="middle_name" name="middle_name"
+                        value="{{ profile.middle_name }}" disabled>
+                </div>
+                <div class="mb-3">
+                    <label for="last_name" class="form-label">Last Name</label>
+                    <input type="text" class="form-control" id="last_name" name="last_name"
+                        value="{{ profile.last_name }}" disabled>
+                </div>
+                <div class="mb-3">
+                    <label for="course_code" class="form-label">Course Code</label>
+                    <input type="text" class="form-control" id="course_code" name="course_code"
+                        value="{{ profile.course.code }}" disabled>
+                </div>
+                <div class="mb-3">
+                    <label for="contact_no" class="form-label">Contact Number</label>
+                    <input type="text" class="form-control" id="contact_no" name="contact_no"
+                        value="0{{ profile.contact_no }}" oninput="limitInputLength(event, 10)">
+                </div>
+                <div class="mb-3">
+                    <label for="entry_year_from" class="form-label">Entry Year From</label>
+                    <input type="text" class="form-control" id="entry_year_from" name="entry_year_from"
+                        value="{{ profile.entry_year_from }}" disabled>
+                </div>
+                <div class="mb-3">
+                    <label for="entry_year_to" class="form-label">Entry Year To</label>
+                    <input type="text" class="form-control" id="entry_year_to" name="entry_year_to"
+                        value="{{ profile.entry_year_to }}" disabled>
+                </div>
+                <button id="btnSave" type="button" class="btn btn-primary">Save Profile</button>
+
+                </main>
+                 <footer class="py-4 bg-light mt-auto">
+                     <div class="container-fluid px-4">
+                         <div class="d-flex align-items-center justify-content-between small">
+                             <div class="text-muted">Copyright &copy; Academic File Request System 2024</div>
+                             <div>
+                                 <a href="#">Privacy Policy</a>
+                                 &middot;
+                                 <a href="#">Terms &amp; Conditions</a>
+                             </div>
+                         </div>
+                     </div>
+                 </footer>
+             </div>
+     </div>
+ 
+         {% include 'footer.html' %}
+ 
+         <script src="" async defer></script>
+         <script>
+
+             function limitInputLength(event, maxLength) {
+                 const input = event.target;
+                 if (input.value.length > maxLength) {
+                     input.value = input.value.slice(0, maxLength);
+                 }
+             }
+
+             function showToast(options){
+                let toast = Toastify({
+                    text: options.message,
+                    duration: 2000,
+                    newWindow: true,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    stopOnFocus: true,
+                    style: {
+                        background: options.color,
+                    },
+                });
+
+                toast.showToast();
+            }      
+            
+            function showErrors(errors){
+                for (const [key, value] of Object.entries(errors)) {
+                    showToast({
+                        'message': value,
+                        'color': '#FF0000',
+                        'duration' : 6000,
+                    });
+                }                
+            }
+             
+             $(document).ready(function() {
+                 init()
+ 
+                 function init(){
+                 }
+
+                 $("#btnSave").click(() => {
+                    let formData = getInputFormData();
+                    let csrftoken = getCookie('csrftoken');
+
+                    // Construct the data object with contact_no as JSON
+                    var data = {
+                        "contact_no": document.querySelector('input[name="contact_no"]').value
+                    };
+
+                    // Convert the data object to a JSON string
+                    var jsonData = JSON.stringify(data);
+
+                    // Send AJAX POST request
+                    $.ajax({
+                        type: "POST",
+                        data: jsonData,
+                        url: '/profile/',
+                        headers: {
+                            'X-CSRFToken': csrftoken
+                        },
+                        contentType: "application/json",
+                        success: function (response) {
+                            showToast({
+                                "message": response.message
+                            })
+                        },
+                        error: function (err) {
+                            let errors = err.responseJSON.errors
+                            showErrors(errors);
+                        },
+                    });
+                    
+                 })
+
+                 function getInputFormData(){
+                    let formData = new FormData();
+
+                    // Append editable input fields
+                    formData.append('contact_no', document.querySelector('input[name="contact_no"]').value);
+
+                    // Debug
+                    formData.forEach(function(value, key){
+                        console.log(key + ': ' + value);
+                    });
+
+                    return formData;
+                 }
+
+                 // Function to get CSRF cookie value
+                 function getCookie(name) {
+                     var cookieValue = null;
+                     if (document.cookie && document.cookie !== '') {
+                         var cookies = document.cookie.split(';');
+                         for (var i = 0; i < cookies.length; i++) {
+                             var cookie = cookies[i].trim();
+                             // Does this cookie string begin with the name we want?
+                             if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                 break;
+                             }
+                         }
+                     }
+                     return cookieValue;
+                 }
+             });
+         </script>
+     </body>
+ </html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+        {% load static %}
+        {% include 'header.html' %}
+        
+        <style>
+            .overlay {
+                overflow: hidden;
+            }
+
+            .overlay::after {
+                content: "";
+                display: block;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+            }
+            
+            .form-view {
+                display: none;
+            }
+            
+            .form-view.active {
+                display: block;
+            }
+        </style>
+    </head>
+    <body class="sb-nav-fixed">
+
+        {% if user.is_authenticated %}
+        {% include 'user/user-topnav.html' %}
+        
+        <div id="layoutSidenav">
+
+            {% include 'user/user-sidenav.html' %}
+            {% endif %}
+
+            <div id="layoutSidenav_content" {% if not user.is_authenticated %}style="margin-left: 0 !important;"{% endif %}>
+                <main>
+                    <div class="container-fluid px-4">
+                        {% if user.is_authenticated %}
+                        <h1 class="mt-4">Create Request</h1>
+                        <ol class="breadcrumb mb-4">
+                            <li class="breadcrumb-item active">Choose documents to request, upload required files</li>
+                        </ol>
+                        {% else %}
+                        <h1 class="mt-4">Create initial request</h1>
+                        {% endif %}
+                        
+                        <!-- Step 1: Profile Form (only for non-authenticated users) -->
+                        <div id="profile-view" class="form-view active">
+                            {% if not user.is_authenticated and request.session.temp_user_email %}
+                            <div class="alert alert-info pb-0">
+                                <p>You are creating a request as an unathenticated user with email: {{ request.session.temp_user_email }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if not user.is_authenticated %}
+                            {% include 'profile_form.html' %}
+                            <div class="text-end mt-3">
+                                <button id="btnNext" class="btn btn-primary">Next</button>
+                            </div>
+                            {% else %}
+                            <script>
+                                // If user is authenticated, automatically show the request form
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    document.getElementById('request-view').classList.add('active');
+                                    document.getElementById('profile-view').classList.remove('active');
+                                    
+                                    // Auto-refresh requests to ensure they're current
+                                    if (typeof refreshActiveRequests === 'function') {
+                                        refreshActiveRequests();
+                                    }
+                                });
+                            </script>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Step 2: Request Form -->
+                        <div id="request-view" class="form-view {% if user.is_authenticated %}active{% endif %}">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fs-6"> <i class="fa fa-plus" aria-hidden="true"></i> Create Requests</span>
+                                    </div>
+                                </div>
+                                <div class="card-body h-100 p-4">
+                                    <div class="column">
+                                        <div class="col-md-6 mb-3">
+                                            <h5 class="mb-3">Select document to request:</h5>
+                                            <div class="mb-3">
+                                                <select name="request" id="request" class="form-select">
+                                                    {% for request_obj in all_requests %}
+                                                    <option value="{{ request_obj.id }}">{{ request_obj.document }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <button id="refreshRequestsBtn" type="button" class="btn btn-sm btn-outline-secondary mt-2">
+                                                    <i class="fas fa-sync-alt"></i> Refresh Request Types
+                                                </button>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="number_of_copies" class="form-label">Number of Copies:</label>
+                                                <input type="number" id="number_of_copies" name="number_of_copies" class="form-control" min="1" value="1">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="authorization_letter" class="form-label">Authorization Letter (Optional):</label>
+                                                <input type="file" id="authorization_letter" name="authorization_letter" class="form-control">
+                                                <div class="form-text">Upload an authorization letter if you're requesting on behalf of someone else.</div>
+                                            </div>
+                                            <div class="d-flex">
+                                                {% if not user.is_authenticated %}
+                                                <button id="btnBack" class="btn btn-secondary me-2">Back</button>
+                                                {% endif %}
+                                                <button id="btnCreate" type="button" class="btn btn-primary">Create</button>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="col-md-6">
+                                            <div id="container"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright © Academic File Request System 2024</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                ·
+                                <a href="#">Terms & Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+        
+        <!-- Include the external JavaScript file -->
+        <script src="{% static 'js/request_user.js' %}"></script>
+        
+        <!-- Form navigation script -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Get form view elements
+                const profileView = document.getElementById('profile-view');
+                const requestView = document.getElementById('request-view');
+                
+                // Add refresh functionality for request dropdown
+                const refreshRequestsBtn = document.getElementById('refreshRequestsBtn');
+                if (refreshRequestsBtn) {
+                    refreshRequestsBtn.addEventListener('click', function() {
+                        // Show loading spinner
+                        const icon = this.querySelector('i');
+                        if (icon) {
+                            icon.classList.add('fa-spin');
+                        }
+                        this.disabled = true;
+                        
+                        // Call the refresh function
+                        refreshActiveRequests();
+                        
+                        // Re-enable the button after a short delay
+                        setTimeout(() => {
+                            this.disabled = false;
+                            if (icon) {
+                                icon.classList.remove('fa-spin');
+                            }
+                        }, 1000);
+                    });
+                }
+                
+                // Auto-refresh the requests on page load to ensure they're current
+                refreshActiveRequests();
+                
+                // Function to refresh the request dropdown with only active requests
+                function refreshActiveRequests() {
+                    const requestDropdown = document.getElementById('request');
+                    if (!requestDropdown) return;
+                    
+                    // Show loading indicator
+                    requestDropdown.disabled = true;
+                    
+                    // Fetch active requests
+                    fetch('/request/active-list/')
+                        .then(response => response.json())
+                        .then(data => {
+                            // Clear existing options
+                            requestDropdown.innerHTML = '';
+                            
+                            // Add new options
+                            if (data && data.length > 0) {
+                                data.forEach(req => {
+                                    const option = document.createElement('option');
+                                    option.value = req.id;
+                                    option.textContent = req.document;
+                                    requestDropdown.appendChild(option);
+                                });
+                            } else {
+                                // No active requests
+                                const option = document.createElement('option');
+                                option.textContent = 'No active request types available';
+                                requestDropdown.appendChild(option);
+                            }
+                            
+                            // Re-enable dropdown
+                            requestDropdown.disabled = false;
+                            
+                            // Show success message
+                            showToast({
+                                message: 'Request types refreshed successfully',
+                                color: '#28a745'
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error refreshing requests:', error);
+                            requestDropdown.disabled = false;
+                            showToast({
+                                message: 'Error refreshing request types',
+                                color: '#dc3545'
+                            });
+                        });
+                }
+                
+                // Make the function globally available
+                window.refreshActiveRequests = refreshActiveRequests;
+                
+                // Next button functionality
+                const btnNext = document.getElementById('btnNext');
+                if (btnNext) {
+                    btnNext.addEventListener('click', function() {
+                        // Validate profile form before proceeding
+                        if (validateProfileForm()) {
+                            profileView.classList.remove('active');
+                            requestView.classList.add('active');
+                        } else {
+                            showToast({ 
+                                message: 'Please fill in all required fields', 
+                                color: '#FF0000' 
+                            });
+                        }
+                    });
+                }
+                
+                // Back button functionality
+                const btnBack = document.getElementById('btnBack');
+                if (btnBack) {
+                    btnBack.addEventListener('click', function() {
+                        requestView.classList.remove('active');
+                        profileView.classList.add('active');
+                    });
+                }
+                
+                // Profile form validation
+                function validateProfileForm() {
+                    if (!document.getElementById('profile-form')) {
+                        return true; // No profile form to validate (authenticated user)
+                    }
+                    
+                    const requiredFields = document.getElementById('profile-form').querySelectorAll('[required]');
+                    let isValid = true;
+                    
+                    requiredFields.forEach(field => {
+                        if (!field.value) {
+                            isValid = false;
+                            field.classList.add('is-invalid');
+                        } else {
+                            field.classList.remove('is-invalid');
+                        }
+                    });
+                    
+                    return isValid;
+                }
+
+                // Clear any stuck error messages on page load
+                const container = document.getElementById("container");
+                if (container) {
+                    container.innerHTML = "";
+                }
+            });
+        </script>
+    </body>
+</html>

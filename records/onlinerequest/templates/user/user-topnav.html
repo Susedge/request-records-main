@@ -1,0 +1,78 @@
+<nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+    <!-- Navbar Brand-->
+    <a class="navbar-brand ps-3" href="/user/dashboard/">User Panel</a>
+    <!-- Sidebar Toggle-->
+    <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
+
+    <!-- Navbar-->
+    <ul class="navbar-nav ms-auto me-3 me-lg-4">
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="#" id="profileBtn">Profile</a></li>
+                <li><hr class="dropdown-divider" /></li>
+                <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+            </ul>
+        </li>
+    </ul>
+</nav>
+
+<!-- Profile Modal -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Content will be loaded dynamically -->
+            <div class="modal-body text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Function to show toast notifications
+        function showToast(options) {
+            Toastify({
+                text: options.message,
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: options.color,
+                stopOnFocus: true
+            }).showToast();
+        }
+
+        // Handle profile button click
+        $('#profileBtn').on('click', function() {
+            openProfileModal();
+        });
+
+        function openProfileModal() {
+            const modal = $('#profileModal');
+            
+            // Show loading spinner
+            modal.find('.modal-content').html('<div class="modal-body text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+            
+            // Open the modal
+            modal.modal('show');
+            
+            // Load profile data
+            $.ajax({
+                url: '/profile/edit/',
+                type: 'GET',
+                success: function(response) {
+                    modal.find('.modal-content').html(response);
+                },
+                error: function() {
+                    modal.find('.modal-content').html('<div class="modal-body"><div class="alert alert-danger">Error loading profile data</div></div>');
+                }
+            });
+        }
+
+        // Make showToast function globally available
+        window.showToast = showToast;
+    });
+</script>

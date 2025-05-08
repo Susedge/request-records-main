@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic File Request System</title>
+    {% include 'header.html' %}
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Roboto', sans-serif;
+        }
+        .jumbotron {
+            background-image: url(static/images/files-blurred.png);
+            background-size: cover;
+            color: #fff;
+            padding: 4rem 2rem;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s;
+            position: relative;
+        }
+        .card-header{
+          background-color: rgb(233, 231, 231);
+        }
+        .card-body{
+          background-image: url(static/images/paper.jpg);
+          background-repeat: no-repeat;
+          background-size: cover;
+          padding-bottom: 50px;
+        }
+        .card:hover {
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+        }
+        .card-title {
+            font-weight: bold;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .card-hover-btn {
+            position: absolute; 
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .card:hover .card-hover-btn {
+            opacity: 1;
+        }
+        .required-files {
+            margin-top: 10px;
+            list-style-type: square;
+        }
+        .required-files li {
+            margin-bottom: 2px;
+            margin-left: 20px;
+        }
+
+        /* Custom scrollbar styles */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background-color: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: #888;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <div class="jumbotron text-center">
+        <h1 class="display-4">Academic File Request System</h1>
+        <p class="lead">Your One-Stop Solution for Academic Document Requests</p>
+        <hr class="my-4">
+        <a href="/signup/" class="btn btn-primary">Get Started</a>
+    </div>
+
+    <div class="container mt-4">
+      <h3 class="text-center text-secondary fw-bold">AVAILABLE DOCUMENTS</h3>
+      <hr>
+        {% if request_forms %}
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                {% for request_form in request_forms %}
+                    <div class="col">
+                        <div class="card h-100">
+                            <div class="card-header">
+                              <div class="d-flex justify-content-between">
+                                <div>
+                                  <h5 class="card-title text-primary mb-0">{{ request_form.document.description }}</h5>
+                                  <p class="card-text text-muted">{{ request_form.description }}</p>
+                                </div>
+                                <div>
+                                  <span class="badge bg-primary">PHP{{ request_form.price }}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text mb-2"><strong>Required Files:</strong></p>
+                                <ul class="required-files">
+                                    {% for description in request_form.requirement_descriptions %}
+                                        <li>{{ description }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <a href="/signup/" class="btn btn-secondary w-75 card-hover-btn mt-0">Request</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-center">No request forms found.</p>
+        {% endif %}
+    </div>
+
+    <footer class="footer mt-auto text-center py-3">
+        <div class="container mt-5">
+            <p>&copy; {% now "Y" %} Academic File Request System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    {% include 'footer.html' %}
+</body>
+</html>

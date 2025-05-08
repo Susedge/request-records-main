@@ -1,0 +1,66 @@
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <span class="fs-6"><i class="fa fa-user" aria-hidden="true"></i> Fill-up user info</span>
+        </div>
+    </div>
+    <div class="card-body h-100 p-4">
+        <div class="row">
+            <div class="col-md-12">
+                <form id="profile-form">
+                <!-- Replace the existing user type selection with this code -->
+                <div class="form-group mb-3">
+                    <label for="userType">User Type</label>
+                    <select class="form-select" id="user-type" name="user_type" required>
+                        <option value="" selected disabled>Select your user type</option>
+                        <option value="1">Student</option>
+                        <option value="2">Faculty</option>
+                        <option value="3">Alumni</option>
+                        <option value="7">Authorized Person</option>
+                    </select>
+                </div>
+
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="last-name" class="form-label">Last Name:</label>
+                            <input type="text" id="last-name" name="last_name" class="form-control" required>
+                        </div>
+                        <div class="col">
+                            <label for="first-name" class="form-label">First Name:</label>
+                            <input type="text" id="first-name" name="first_name" class="form-control" required>
+                        </div>
+                        <div class="col">
+                            <label for="middle-name" class="form-label">Middle Name:</label>
+                            <input type="text" id="middle-name" name="middle_name" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contact-no" class="form-label">Contact Number:</label>
+                        <input type="text" id="contact-no" name="contact_no" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="course" class="form-label">Program:</label>
+                        <select id="course" name="course" class="form-select" required>
+                            <option value="">Select Program</option>
+                            {% for course in all_courses %}
+                            <option value="{{ course.id }}">{{ course.code }} - {{ course.description }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="entry-year-from" class="form-label">Year of Entry (From):</label>
+                            <input type="number" id="entry-year-from" name="entry_year_from" class="form-control" 
+                                   min="1900" max="2099" step="1" value="2023">
+                        </div>
+                        <div class="col">
+                            <label for="entry-year-to" class="form-label">Year of Entry (To):</label>
+                            <input type="number" id="entry-year-to" name="entry_year_to" class="form-control" 
+                                   min="1900" max="2099" step="1" value="2024">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

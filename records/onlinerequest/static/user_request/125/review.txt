@@ -1,0 +1,12 @@
+- VALUE field can be configured as required as well
+	* For the new prompt please use the prompt and inform the user that the field is required "Value is required."
+- After save if it is a new record, select the row based on dbpanel VALUE field
+	* Instead of using viewstate please get the VALUE before the call to LoadPickListGrid();
+- Please remove handling for issue#6, the edit picklist is using the toolkit popup
+	* If the edit picklist is modified to jQuery dialog it will match the behavior in case search pop inside case when an alert is shown
+- Please reset grid state on open of popup instead of on close
+
+----
+- Please remove excess comma in ShowAlert after {2}
+- Please get the "Value" text from dbpanel prompt for the required message
+	* PLCDBPanel.GetFieldPrompt("VALUE")

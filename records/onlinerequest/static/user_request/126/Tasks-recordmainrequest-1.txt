@@ -1,0 +1,7 @@
+[Request] if click = appear on #req (admin-panel side) 
+	{
+		[all request w/in this days/week/month filter]
+		[show what is the most requested files or documents(cor,reports of grade, etc.) using graph or pie chart]
+		shows Total requests of how many user.
+	}
+request if done processing, will show time of process in the dashboard along with status[complete, cancelled, or late finished] for example (1 day and 2 hours completed request)

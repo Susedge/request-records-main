@@ -1,0 +1,83 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>QR Code Management</title>
+        {% include 'header.html' %}
+    </head>
+
+    <body class="sb-nav-fixed">
+        {% include 'admin/admin-topnav.html' %}
+
+        <div id="layoutSidenav">
+            {% include 'admin/admin-sidenav.html' %}
+
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4">
+                        <h1 class="mt-4">Payment QR Code Management</h1>
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="fas fa-qrcode me-1"></i>
+                                Upload Payment QR Code
+                            </div>
+                            <div class="card-body">
+                                {% if messages %}
+                                    {% for message in messages %}
+                                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                <form method="post" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <div class="mb-3">
+                                        <label for="qrName" class="form-label">Payment Method Name</label>
+                                        <input type="text" class="form-control" id="qrName" name="payment_method" value="{{ current_method|default:'GCASH' }}" required>
+                                        <div class="form-text">Name of the payment method this QR code represents</div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="qrImage" class="form-label">QR Code Image</label>
+                                        <input type="file" class="form-control" id="qrImage" name="qr_image" accept="image/*" required>
+                                        <div class="form-text">Maximum file size: 5MB. Supported formats: JPG, PNG</div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">Upload QR Code</button>
+                                </form>
+                                
+                                {% if current_qr %}
+                                <div class="mt-4">
+                                    <h5>Current QR Code:</h5>
+                                    <div class="text-center">
+                                        <img src="{{ current_qr }}" alt="Current QR Code" style="max-width: 300px;" class="img-thumbnail">
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright © Academic File Request System 2024</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                ·
+                                <a href="#">Terms & Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        
+        {% include 'footer.html' %}
+    </body>
+</html>

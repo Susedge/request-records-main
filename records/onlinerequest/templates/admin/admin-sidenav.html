@@ -1,0 +1,70 @@
+<style>
+    table.dataTable thead th{
+                padding: 10px;
+            }
+</style>
+
+<div id="layoutSidenav_nav">
+    <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+        <div class="sb-sidenav-menu">
+            <div class="nav">
+                <div class="sb-sidenav-menu-heading">Core</div>
+                <a class="nav-link" href="{% url 'admin_dashboard' %}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                    Dashboard
+                </a>
+                
+                <!-- Original navigation items -->
+                <div class="sb-sidenav-menu-heading">Interface</div>
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
+                    <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
+                    User Requests
+                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                    <nav class="sb-sidenav-menu-nested nav">
+                        <a class="nav-link" href="/admin-panel/analytics/">
+                            <div class="sb-nav-link-icon"><i class="fas fa-chart-pie"></i></div>
+                            Analytics
+                        </a>                
+                        <a class="nav-link" href="/admin-panel/user-records/">
+                            <div class="sb-nav-link-icon"><i class="fas fa-user"></i></div>
+                            List of users
+                        </a>
+                        <a class="nav-link" href="/admin-panel/user-request/">
+                            <div class="sb-nav-link-icon"><i class="fas fa-list-ul"></i></div>
+                            List of user requests
+                        </a>
+                        <a class="nav-link" href="/admin-panel/reports/">
+                            <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                            Templates
+                        </a>
+                    </nav>
+                </div>
+                <div class="sb-sidenav-menu-heading">Configurations</div>
+                <a class="nav-link" href="/admin-panel/request/">
+                    <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
+                    Create Request Form
+                </a>
+                <a class="nav-link" href="/admin-panel/codetable/">
+                    <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                    Lookup Tables
+                </a>
+                <a class="nav-link" href="/admin-panel/qr-upload/">
+                    <div class="sb-nav-link-icon"><i class="fas fa-qrcode"></i></div>
+                    GCash QR
+                </a>
+                <!-- Database Backup Section - Moved to bottom -->
+                <div class="sb-sidenav-menu-heading">System Utilities</div>
+                <a class="nav-link" href="{% url 'backup_list' %}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-database"></i></div>
+                    Database Backups
+                </a>
+            </div>
+        </div>
+        <div class="sb-sidenav-footer">
+            <div class="small">Logged in as:</div>
+            {{ user.email }}
+        </div>        
+    </nav>
+</div>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+        {% include 'header.html' %}
+    </head>
+    <body class="sb-nav-fixed">
+        {% include 'admin/admin-topnav.html' %}
+        <div id="layoutSidenav">
+            {% include 'admin/admin-sidenav.html' %}
+
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4">
+                        <h1 class="mt-4">List of user requests</h1>
+                        <ol class="breadcrumb mb-4">
+                            <li class="breadcrumb-item active">List of user request status and information</li>
+                        </ol>
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fs-6"> <i class="fa fa-list-ul" aria-hidden="true"></i>Requests</span>
+                                </div>
+                            </div>
+                            <div class="card-body">                         
+
+                                <!-- Add filter controls -->
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="documentFilter">Document Type</label>
+                                            <select id="documentFilter" class="form-select form-select-sm">
+                                                <option value="">All Documents</option>
+                                                {% for document in all_document_types %}
+                                                    <option value="{{ document.description }}">{{ document.description }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="statusFilter">Status</label>
+                                            <select id="statusFilter" class="form-select form-select-sm">
+                                                <option value="">All Statuses</option>
+                                                <option value="Processing">Processing</option>
+                                                <option value="Completed">Completed</option>
+                                                <option value="For Pickup">For Pickup</option>
+                                                <option value="inactive">Inactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="dateRangeFilter">Date Range</label>
+                                            <input type="text" id="dateRangeFilter" class="form-control form-control-sm" placeholder="From - To">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <table id="datatable">
+                                    <thead>
+                                    <tr>
+                                        <th>User Information</th>
+                                        <th>Date Created</th>
+                                        <th>Documents</th>
+                                        <th>Status</th>
+                                        <th>Approval</th>
+                                        <th>Action</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% if user_requests %}
+                                        {% for user_request in user_requests %}
+                                            <tr id="tr{{ user_request.id }}">
+                                                <td>
+                                                    <strong>{{ user_request.user.student_number }}</strong>
+                                                    <br>
+                                                    {% if user_request.user.profile %}
+                                                        {{ user_request.user.profile.first_name }} 
+                                                        {% if user_request.user.profile.middle_name %}
+                                                            {{ user_request.user.profile.middle_name }} 
+                                                        {% endif %}
+                                                        {{ user_request.user.profile.last_name }}
+                                                    {% else %}
+                                                        <em>No profile information</em>
+                                                    {% endif %}
+                                                    <br>
+                                                    <small>{{ user_request.user.email }}</small>
+                                                </td>
+                                                <td>{{ user_request.created_at|date:"F d, Y H:i" }}</td>
+                                                <td>{{ user_request.request }}</td>
+                                                <td>{{ user_request.status }}</td>
+                                                <td>
+                                                    {% if user_request.approved %}
+                                                        <span class="badge bg-success">Approved</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">Pending Approval</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-primary btn-sm" onclick="viewRequest('{{ user_request.id }}')"> View </button>
+                                                    <button class="btn btn-warning btn-sm" onclick="markInactive('{{ user_request.id }}')"> Mark as inactive </button>
+                                                    <button class="btn btn-primary btn-sm" onclick="deleteRequest('{{ user_request.id }}')"> Delete </button>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    {% endif %}
+                                    </tbody>
+                                </table>
+
+                                
+                            </div>                            
+                            
+                        </div>
+                    </div>
+                </main>
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright © Academic File Request System 2024</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                ·
+                                <a href="#">Terms & Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+
+        <script>
+            function showToast(options){
+                let toast = Toastify({
+                    text: options.message,
+                    duration: 2000,
+                    newWindow: true,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    stopOnFocus: true,
+                    style: {
+                        background: options.color,
+                    },
+                });
+
+                toast.showToast();
+            } 
+
+            function deleteRequest(id) {
+                var csrftoken = getCookie('csrftoken');
+
+                // Send AJAX POST request
+                $.ajax({
+                    type: 'POST',
+                    url: '/admin-panel/user-request/' + id + '/delete', 
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    },
+                    success: function(response) {
+                        showToast({
+                            'message': response.message,
+                            'color': response.status ? '#008000' : '#FF0000'
+                        })
+
+                        if (response.status) {
+                            deleteRow(id);
+                        }
+                    },
+                    error: function(xhr, errmsg, err) {
+                        console.log(errmsg);
+                    }
+                });
+            }
+
+            function viewRequest(id){
+                window.location.replace('/admin-panel/user-request/' + id);
+            }
+
+            function deleteRow(id){
+                let row = document.getElementById("tr" + id);
+                row.innerHTML = "";
+            }
+
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = cookies[i].trim();
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                            }
+                        }
+                }
+                return cookieValue;
+            }
+
+            $(document).ready(function() {
+                // Initialize DataTable with advanced features
+                var table = $('#datatable').DataTable({
+                    responsive: true,
+                    dom: 'Bfrtip',
+                    buttons: [
+                        'copy', 'csv', 'excel', 'pdf', 'print'
+                    ]
+                });
+                
+                // Document filter
+                $('#documentFilter').on('change', function() {
+                    var val = $(this).val();
+                    table.column(1) // Documents column (adjust index if needed)
+                        .search(val ? val : '', true, false)
+                        .draw();
+                });
+                
+                // Status filter
+                $('#statusFilter').on('change', function() {
+                    var val = $(this).val();
+                    table.column(2) // Status column (adjust index if needed)
+                        .search(val ? val : '', true, false)
+                        .draw();
+                });
+                
+                // Initialize date range picker if available
+                if($.fn.daterangepicker) {
+                    $('#dateRangeFilter').daterangepicker({
+                        autoUpdateInput: false,
+                        locale: {
+                            cancelLabel: 'Clear'
+                        }
+                    });
+                    
+                    $('#dateRangeFilter').on('apply.daterangepicker', function(ev, picker) {
+                        $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
+                        
+                        // Custom filtering function for date range
+                        $.fn.dataTable.ext.search.push(
+                            function(settings, data, dataIndex) {
+                                var min = picker.startDate;
+                                var max = picker.endDate;
+                                
+                                // Assuming created_at date is stored in a data attribute in each row
+                                var date = new Date($('tr:eq(' + dataIndex + ')').data('created-at'));
+                                
+                                if (
+                                    (min === null && max === null) ||
+                                    (min === null && date <= max) ||
+                                    (min <= date && max === null) ||
+                                    (min <= date && date <= max)
+                                ) {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        );
+                        
+                        table.draw();
+                    });
+                    
+                    $('#dateRangeFilter').on('cancel.daterangepicker', function(ev, picker) {
+                        $(this).val('');
+                        // Remove the custom filter
+                        $.fn.dataTable.ext.search.pop();
+                        table.draw();
+                    });
+                }
+            });
+
+            function markInactive(id) {
+                var csrftoken = getCookie('csrftoken');
+
+                // Send AJAX POST request
+                $.ajax({
+                    type: 'POST',
+                    url: '/admin-panel/user-request/' + id + '/mark-inactive', 
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    },
+                    success: function(response) {
+                        showToast({
+                            'message': response.message,
+                            'color': response.status ? '#008000' : '#FF0000'
+                        })
+
+                        if (response.status) {
+                            // Update the status cell in the table
+                            let row = document.getElementById("tr" + id);
+                            let statusCell = row.cells[2]; // Status is in the third column
+                            statusCell.textContent = "inactive";
+                        }
+                    },
+                    error: function(xhr, errmsg, err) {
+                        console.log(errmsg);
+                        showToast({
+                            'message': 'Error marking request as inactive',
+                            'color': '#FF0000'
+                        })
+                    }
+                });
+            }
+
+        </script>
+    </body>
+</html>

@@ -1,0 +1,117 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>Reports</title>
+        {% include 'header.html' %}
+    </head>
+
+    <body class="sb-nav-fixed">
+
+        {% include 'user/user-topnav.html' %}
+
+        <div id="layoutSidenav">
+            {% include 'user/user-sidenav.html' %}
+
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4">
+                        <h1 class="mt-4">Reports</h1>
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="fas fa-file-pdf me-1"></i>
+                                Available Report Templates
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Report Name</th>
+                                            <th>Description</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for template in templates %}
+                                        <tr>
+                                            <td>{{ template.name }}</td>
+                                            <td>{{ template.description }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <select class="form-select form-select-sm me-2" style="width: auto;" id="purpose-{{ template.id }}">
+                                                        <option value="">Select Purpose</option>
+                                                        {% for purpose in purposes %}
+                                                            <option value="{{ purpose.id }}">{{ purpose.description }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <a href="{% url 'generate_report_pdf' template.id %}" 
+                                                    class="btn btn-primary btn-sm"
+                                                    onclick="return generatePdfWithPurpose(this, '{{ template.id }}')">
+                                                        Generate PDF
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}                                    
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright © Academic File Request System 2024</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                ·
+                                <a href="#">Terms & Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        
+        {% include 'footer.html' %}
+
+        <script>
+            function openPdfInPopup(url) {
+                // Open popup window centered on screen
+                var width = 1000;
+                var height = 1000;
+                var left = (screen.width - width) / 2;
+                var top = (screen.height - height) / 2;
+                
+                window.open(url, 'PdfViewer', 
+                    'width=' + width + 
+                    ',height=' + height + 
+                    ',top=' + top + 
+                    ',left=' + left + 
+                    ',resizable=yes,scrollbars=yes,toolbar=no,menubar=no');
+                return false;
+            }
+
+            function generatePdfWithPurpose(link, templateId) {
+                const purposeSelect = document.getElementById('purpose-' + templateId);
+                const purposeId = purposeSelect.value;
+                
+                if (!purposeId) {
+                    alert('Please select a purpose first');
+                    return false;
+                }
+                
+                const url = link.href + '?purpose=' + purposeId;
+                return openPdfInPopup(url);
+            }
+        </script>
+    </body>
+    </body>
+</html>

@@ -1,0 +1,164 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>Report Form</title>
+        {% include 'header.html' %}
+        <link rel="stylesheet" href="{% static 'css/forms.css' %}">
+    </head>
+
+    <body class="sb-nav-fixed">
+        {% include 'admin/admin-topnav.html' %}
+
+        <div id="layoutSidenav">
+            {% include 'admin/admin-sidenav.html' %}
+
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4">
+                        <h1 class="mt-4">Generate Template: {{ template.name }}</h1>
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="fas fa-file-alt me-1"></i>
+                                Fill Template Information
+                            </div>
+                            <div class="card-body">
+                                <form method="post" action="{% url 'admin_generate_report_pdf' template.id %}" class="form-container">
+                                    {% csrf_token %}
+                                    
+                                    <div class="form-section">
+                                        <div class="form-section-title">Personal Information</div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3 required-field">
+                                                    <label for="first_name" class="form-label">First Name</label>
+                                                    <input type="text" class="form-control" id="first_name" name="first_name" required>
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="middle_name" class="form-label">Middle Name</label>
+                                                    <input type="text" class="form-control" id="middle_name" name="middle_name">
+                                                </div>
+                                                <div class="form-group mb-3 required-field">
+                                                    <label for="last_name" class="form-label">Last Name</label>
+                                                    <input type="text" class="form-control" id="last_name" name="last_name" required>
+                                                </div>
+                                                <div class="form-group mb-3 required-field">
+                                                    <label for="suffix" class="form-label">Suffix (Jr., Sr., etc.)</label>
+                                                    <input type="text" class="form-control" id="suffix" name="suffix" placeholder="Optional">
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="contact_no" class="form-label">Contact Number</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                                        <input type="text" class="form-control" id="contact_no" name="contact_no">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label for="entry_year_from" class="form-label">Entry Year (From)</label>
+                                                    <input type="text" class="form-control datepicker-input" id="entry_year_from" name="entry_year_from">
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="entry_year_to" class="form-label">Entry Year (To)</label>
+                                                    <input type="text" class="form-control datepicker-input" id="entry_year_to" name="entry_year_to">
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="course" class="form-label">Program</label>
+                                                    <select class="form-select" id="course" name="course">
+                                                        <option value="">Select Program</option>
+                                                        {% for course in all_courses %}
+                                                            <option value="{{ course.code }}">{{ course.code }} - {{ course.description }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="student_number" class="form-label">Student Number</label>
+                                                    <input type="text" class="form-control" id="student_number" name="student_number">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-section">
+                                        <div class="form-section-title">Additional Information</div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label for="email" class="form-label">Email</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                                        <input type="email" class="form-control" id="email" name="email">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3 required-field">
+                                                    <label for="purpose" class="form-label">Purpose</label>
+                                                    <select class="form-select" id="purpose" name="purpose" required>
+                                                        <option value="">Select Purpose</option>
+                                                        {% for purpose in purposes %}
+                                                            <option value="{{ purpose.description }}">{{ purpose.description }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-section">
+                                        <div class="form-section-title">Output Format</div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3 required-field">
+                                                    <label class="form-label">Select Format</label>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="output_format" id="format_docx" value="docx" checked>
+                                                        <label class="form-check-label" for="format_docx">
+                                                            <i class="fas fa-file-word"></i> DOCX
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="output_format" id="format_pdf" value="pdf">
+                                                        <label class="form-check-label" for="format_pdf">
+                                                            <i class="fas fa-file-pdf"></i> PDF
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-buttons">
+                                        <a href="{% url 'admin_reports' %}" class="btn btn-secondary">Cancel</a>
+                                        <button type="submit" class="btn btn-primary">Generate Template</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright © Academic File Request System 2024</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                ·
+                                <a href="#">Terms & Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        
+        {% include 'footer.html' %}
+    </body>
+</html>

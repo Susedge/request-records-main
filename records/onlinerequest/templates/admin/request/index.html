@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Create Request</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+
+        {% include 'header.html' %}
+    </head>
+    <body class="sb-nav-fixed">
+        {% include 'admin/admin-topnav.html' %}
+
+        <div id="layoutSidenav">
+            
+            {% include 'admin/admin-sidenav.html' %}
+
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4">
+                        <h1 class="mt-4">Create Request Forms</h1>
+                        <ol class="breadcrumb mb-4">
+                            <li class="breadcrumb-item active">Add new user information</li>
+                        </ol>
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fs-6"> <i class="fa fa-list" aria-hidden="true"></i> Existing Forms</span>
+                                    <button type="button" class="btn btn-sm btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#createRequestModal">
+                                        <i class="fas fa-plus me-2"></i> Create New Request
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                               
+                                <div class="modal fade" id="createRequestModal" tabindex="-1" aria-labelledby="createRequestModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="createRequestModalLabel">Create Request Form</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form method="POST">
+                                                    {% csrf_token %}
+                                                    <div class="mb-3">
+                                                        <label for="documents" class="form-label">Document</label>
+                                                        <select class="form-select" name="documents" id="documents">
+                                                            {% if documents %}
+                                                            {% for document in documents %}
+                                                            {% if document.active %}
+                                                            <option value="{{ document.code }}">{{ document.description }}</option>
+                                                            {% endif %}
+                                                            {% endfor %}
+                                                            {% endif %}
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="files_required" class="form-label">Required Files</label>
+                                                        <select class="form-select" id="requirements" multiple required>
+                                                            {% if requirements %}
+                                                            {% for requirement in requirements %}
+                                                            <option value="{{ requirement.code }}">{{ requirement.description }}</option>
+                                                            {% endfor %}
+                                                            {% endif %}
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="files_required" class="form-label">Price (PHP)</label>
+                                                        <input type="number" name="price" id="txtPrice" onblur="txtPriceOnBlur(this)" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="description" class="form-label">Description</label>
+                                                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="Description" required></textarea>
+                                                    </div>
+                                                    <div class="d-flex justify-content-end">
+                                                        <button type="submit" class="btn btn-primary ms-auto">
+                                                            Submit
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                
+                                <div id="request">
+                                    <table id="datatable">
+                                        <thead>
+                                        <tr>
+                                            <th class="text-start">Description</th>
+                                            <th class="text-start">No. of Files Required</th>
+                                            <th class="text-start">Document</th>
+                                            <th class="text-start">Status</th>
+                                            <th class="text-start">Action</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="requestsTable"></tbody>
+                                    </table>
+                                </div>
+
+                                
+                            </div>                            
+                            
+                        </div>
+                    </div>
+                </main>
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright &copy; Academic File Request System 2024</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                &middot;
+                                <a href="#">Terms &amp; Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+
+        <script>
+            function txtPriceOnBlur(input){
+                let txtInput = input;
+                txtInput.value = formatNumberToTwoDecimalPlaces(txtInput.value);
+            }
+
+            function formatNumberToTwoDecimalPlaces(number) {
+                // Convert the number to a string with two decimal places
+                const formattedNumber = Number(number).toFixed(2);
+                return formattedNumber;
+            }
+
+            $(document).ready(function() {
+                init() // onload
+
+                function init(){
+                    getRequests();
+                }
+
+                function showToast(options){
+                    let toast = Toastify({
+                        text: options.message,
+                        duration: 2000,
+                        newWindow: true,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        stopOnFocus: true,
+                        style: {
+                            background: options.color,
+                        },
+                    });
+
+                    toast.showToast();
+                }
+
+                $('form').on('submit', function(e) {
+                    e.preventDefault(); // Prevent the form from submitting normally
+                    
+                    let txtPrice = document.querySelector("#txtPrice");
+
+                    // Get form data
+                    var formData = new FormData($('form')[0]);
+                    formData.append('requirements', getSelectedValues('requirements'));
+                    
+                    // Send AJAX POST request
+                    $.ajax({
+                        type: 'POST',
+                        url: '/admin-panel/request/', // Replace with your Django URL
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            showToast({
+                                'message': response.message,
+                                'color': response.status ? '#008000' : '#FF0000'
+                            })
+
+                            if (response.status){
+                                resetInputFields();
+                                getRequests();
+                            }
+                        },
+                        error: function(xhr, errmsg, err) {
+                            console.log(errmsg);
+                        }
+                    });
+                });
+
+                function getRequests(){
+                    // Send AJAX POST request
+                    $.ajax({
+                        type: 'GET',
+                        url: '/request/list/',
+                        success: function(response) {
+                            createRequestTable(response);
+                            console.log(response);
+                        },
+                        error: function(xhr, errmsg, err) {
+                            console.log(errmsg);
+                        }
+                    });
+                }
+
+                function deleteRequest(id){
+                    var csrftoken = getCookie('csrftoken');
+
+                    // Send AJAX POST request
+                    $.ajax({
+                        type: 'POST',
+                        url: '/request/' + id + '/delete/', // Replace with your Django URL and include any required parameters or query string
+                        headers: {
+                            'X-CSRFToken': csrftoken
+                        },
+                        success: function(response) {
+                            showToast({
+                                'message': response.message,
+                                'color': response.status ? '#008000' : '#FF0000'
+                            })
+
+                            if (response.status){
+                                getRequests();
+                            }
+                        },
+                        error: function(xhr, errmsg, err) {
+                            console.log(errmsg);
+                        }
+                    });
+                }
+
+                function toggleRequestStatus(id, active) {
+                    var csrftoken = getCookie('csrftoken');
+                    
+                    // Send AJAX POST request
+                    $.ajax({
+                        type: 'POST',
+                        url: '/request/' + id + '/toggle-status/',
+                        headers: {
+                            'X-CSRFToken': csrftoken
+                        },
+                        data: {
+                            'active': active
+                        },
+                        success: function(response) {
+                            showToast({
+                                'message': response.message,
+                                'color': response.status ? '#008000' : '#FF0000'
+                            });
+
+                            if (response.status) {
+                                getRequests(); // Refresh the table
+                            }
+                        },
+                        error: function(xhr, errmsg, err) {
+                            console.log(errmsg);
+                            showToast({
+                                'message': 'Error updating status',
+                                'color': '#FF0000'
+                            });
+                        }
+                    });
+                }
+
+                function resetInputFields(){
+                    let fileCount = document.querySelector("#requirements");
+                    let description = document.querySelector("#description");
+                    let price = document.querySelector("#txtPrice");
+                    
+                    fileCount.value = description.value = price.value = "";
+                }
+
+                function createRequestTable(data) {
+                    // Destroy existing DataTable if it exists
+                    if ($.fn.DataTable.isDataTable('#datatable')) {
+                        $('#datatable').DataTable().destroy();
+                    }
+
+                    // Create a new DataTable
+                    var table = $('#datatable').DataTable({
+                        data: data,
+                        columns: [
+                            { data: 'description' },
+                            { data: 'files_required' },
+                            { data: 'document' },
+                            { 
+                                data: 'active',
+                                render: function(data, type, row) {
+                                    return data ? 
+                                        '<span class="badge bg-success">Active</span>' : 
+                                        '<span class="badge bg-danger">Inactive</span>';
+                                }
+                            },
+                            {
+                                data: null,
+                                render: function (data, type, row) {
+                                    let actionButtons = '<div class="btn-group" role="group">';
+                                    if (data.active) {
+                                        actionButtons += '<button class="btn btn-sm btn-warning status-btn" data-id="' + row.id + '" data-status="inactive">Mark Inactive</button>';
+                                    } else {
+                                        actionButtons += '<button class="btn btn-sm btn-success status-btn" data-id="' + row.id + '" data-status="active">Mark Active</button>';
+                                    }
+                                    actionButtons += '<button class="btn btn-sm btn-danger delete-btn">Delete</button>';
+                                    actionButtons += '</div>';
+                                    return actionButtons;
+                                }
+                            }
+                        ],
+                        responsive: true
+                    });
+
+                    // Unbind any previously bound event handlers
+                    $('#datatable tbody').off('click', '.delete-btn');
+                    $('#datatable tbody').off('click', '.status-btn');
+
+                    // Bind the click event handler for delete using event delegation
+                    $('#datatable tbody').on('click', '.delete-btn', function () {
+                        var row = table.row($(this).parents('tr'));
+                        var rowData = row.data();
+                        deleteRequest(rowData.id);
+                    });
+                    
+                    // Bind the click event handler for status toggle using event delegation
+                    $('#datatable tbody').on('click', '.status-btn', function () {
+                        var row = table.row($(this).parents('tr'));
+                        var rowData = row.data();
+                        var newStatus = $(this).data('status') === 'active';
+                        toggleRequestStatus(rowData.id, newStatus);
+                    });
+                }
+
+                // Function to get CSRF cookie value
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = cookies[i].trim();
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                function getSelectedValues(id) {
+                    const selectElement = document.getElementById(id);
+                    const selectedValues = Array.from(selectElement.selectedOptions).map(option => option.value);
+                    return selectedValues.join(',');
+                }
+            });
+        </script>
+    </body>
+</html>

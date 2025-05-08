@@ -1,0 +1,164 @@
+{% load static %}
+<div class="modal-header">
+    <h5 class="modal-title" id="profileModalLabel">My Profile</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+    <form id="profileForm" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="user_id" id="user_id" value="{{ profile.user_id }}">
+        <input type="hidden" name="record_type" id="record_type" value="{{ profile.record_type }}">
+        
+        <div class="row mb-4">
+            <div class="col-md-3 text-center">
+                <div class="profile-image-container mb-2">
+                    {% if user_profile and user_profile.profile_image %}
+                        <img src="{{ user_profile.profile_image.url }}" alt="Profile Image" class="img-thumbnail rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                        <img src="{% static 'assets/img/default-profile.png' %}" alt="Default Profile" class="img-thumbnail rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="profile_image" class="form-label">Change Profile Picture</label>
+                    <input class="form-control form-control-sm" id="profile_image" name="profile_image" type="file" accept="image/*">
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="student_number" class="form-label">Student Number</label>
+                        <input type="text" class="form-control" id="student_number" name="student_number" value="{{ profile.student_number }}" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ profile.email }}" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="first_name" class="form-label">First Name</label>
+                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ profile.first_name }}" required>
+            </div>
+            <div class="col-md-4">
+                <label for="middle_name" class="form-label">Middle Name</label>
+                <input type="text" class="form-control" id="middle_name" name="middle_name" value="{{ profile.middle_name }}">
+            </div>
+            <div class="col-md-4">
+                <label for="last_name" class="form-label">Last Name</label>
+                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ profile.last_name }}" required>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="course_code" class="form-label">Program</label>
+                <select class="form-select" id="course_code" name="course_code" required>
+                    <option value="">Select Program</option>
+                    {% for course in courses %}
+                    <option value="{{ course.code }}" {% if course.code == profile.course_code %}selected{% endif %}>{{ course.description }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="contact_no" class="form-label">Contact Number</label>
+                <input type="text" class="form-control" id="contact_no" name="contact_no" value="{{ profile.contact_no }}" required>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="entry_year_from" class="form-label">Entry Year (From)</label>
+                <input type="number" class="form-control" id="entry_year_from" name="entry_year_from" value="{{ profile.entry_year_from }}" required>
+            </div>
+            <div class="col-md-6">
+                <label for="entry_year_to" class="form-label">Entry Year (To)</label>
+                <input type="number" class="form-control" id="entry_year_to" name="entry_year_to" value="{{ profile.entry_year_to }}" required>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-info" id="editProfileBtn">Edit</button>
+            <button type="submit" class="btn btn-primary" id="saveProfileBtn" style="display: none;">Save</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Initially disable all form fields except buttons
+        $('#profileForm input, #profileForm select').not('[type="hidden"]').prop('disabled', true);
+        
+        // Edit button click handler
+        $('#editProfileBtn').click(function() {
+            // Enable all form fields
+            $('#profileForm input, #profileForm select').not('[type="hidden"]').not('#student_number').not('#email').prop('disabled', false);
+            
+            // Hide edit button, show save button
+            $(this).hide();
+            $('#saveProfileBtn').show();
+        });
+        
+        // Preview image before upload
+        $('#profile_image').change(function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('.profile-image-container img').attr('src', e.target.result);
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        $('#profileForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            var formData = new FormData(this);
+            var $submitBtn = $('#saveProfileBtn');
+            
+            $submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
+            
+            $.ajax({
+                url: '/profile/save/',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    $submitBtn.html('Save').prop('disabled', false);
+                    
+                    if (response.status) {
+                        showToast({
+                            message: response.message,
+                            color: '#008000'
+                        });
+                        
+                        // Disable form fields again
+                        $('#profileForm input, #profileForm select').not('[type="hidden"]').prop('disabled', true);
+                        
+                        // Show edit button, hide save button
+                        $('#editProfileBtn').show();
+                        $('#saveProfileBtn').hide();
+                    } else {
+                        showToast({
+                            message: response.message,
+                            color: '#FF0000'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $submitBtn.html('Save').prop('disabled', false);
+                    
+                    showToast({
+                        message: 'An error occurred: ' + error,
+                        color: '#FF0000'
+                    });
+                }
+            });
+        });
+    });
+</script>

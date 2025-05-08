@@ -1,0 +1,146 @@
+<!-- Profile Modal -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="profileModalLabel">User Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Content will be loaded dynamically -->
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Form Template (will be loaded dynamically) -->
+<script id="profileFormTemplate" type="text/template">
+    <form id="profileForm" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="user_id" id="user_id" value="">
+        <input type="hidden" name="record_type" id="record_type" value="">
+        
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="student_number" class="form-label">Student Number</label>
+                <input type="text" class="form-control" id="student_number" name="student_number" readonly>
+            </div>
+            <div class="col-md-8">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" readonly>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="first_name" class="form-label">First Name</label>
+                <input type="text" class="form-control" id="first_name" name="first_name" required>
+            </div>
+            <div class="col-md-4">
+                <label for="middle_name" class="form-label">Middle Name</label>
+                <input type="text" class="form-control" id="middle_name" name="middle_name">
+            </div>
+            <div class="col-md-4">
+                <label for="last_name" class="form-label">Last Name</label>
+                <input type="text" class="form-control" id="last_name" name="last_name" required>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="course_code" class="form-label">Program</label>
+                <select class="form-select" id="course_code" name="course_code" required>
+                    <option value="">Select Program</option>
+                    {% for course in courses %}
+                    <option value="{{ course.code }}">{{ course.description }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="contact_no" class="form-label">Contact Number</label>
+                <input type="text" class="form-control" id="contact_no" name="contact_no" required>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="entry_year_from" class="form-label">Entry Year (From)</label>
+                <input type="number" class="form-control" id="entry_year_from" name="entry_year_from" required>
+            </div>
+            <div class="col-md-6">
+                <label for="entry_year_to" class="form-label">Entry Year (To)</label>
+                <input type="number" class="form-control" id="entry_year_to" name="entry_year_to" required>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+    </form>
+</script>
+
+<script>
+    // This script will be activated when the modal content is loaded
+    $(document).on('submit', '#profileForm', function(e) {
+        e.preventDefault();
+        
+        var formData = $(this).serialize();
+        var $submitBtn = $(this).find('button[type="submit"]');
+        
+        $submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
+        
+        $.ajax({
+            url: '/admin-panel/user-accounts/save-profile/',
+            type: 'POST',
+            data: formData,
+            success: function(response) {
+                $submitBtn.html('Save Changes').prop('disabled', false);
+                
+                if (response.status) {
+                    showToast({
+                        message: response.message,
+                        color: '#008000'
+                    });
+                    
+                    // Close modal after successful save
+                    $('#profileModal').modal('hide');
+                    
+                    // Reload page to reflect changes
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showToast({
+                        message: response.message,
+                        color: '#FF0000'
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                $submitBtn.html('Save Changes').prop('disabled', false);
+                
+                showToast({
+                    message: 'An error occurred: ' + error,
+                    color: '#FF0000'
+                });
+            }
+        });
+    });
+    
+    function showToast(options) {
+        Toastify({
+            text: options.message,
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: options.color,
+            stopOnFocus: true
+        }).showToast();
+    }
+</script>

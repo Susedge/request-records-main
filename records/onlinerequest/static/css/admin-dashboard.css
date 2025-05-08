@@ -1,0 +1,9 @@
+.card-body {
+    background-image: url(../images/dashboard-background-dx.jpg);
+    background-repeat: initial;
+    background-size: cover;
+    width: 100%;
+    height: 100%;
+
+    border-radius: 5px;
+}

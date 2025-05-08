@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reference Login Form</title>
+    {% load static %}
+    {% include 'header.html' %}
+    <style>
+        body {
+            background-image: url("{% static 'images/paper.jpg' %}");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        .hidden {
+            display: none;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+        .fade-out {
+            animation: fadeOut 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .form-inline {
+            display: flex;
+            align-items: center;
+        }
+        .form-inline .form-control {
+            margin-right: 10px;
+        }
+
+        .back-button-top-right {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .back-button-top-right:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="/" class="back-button-top-right">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+    <div class="container py-3">
+        <div class="row">
+            <div class="col-12 col-md-5">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <div class="reference-login__form">
+                            <form id="reference-login-form" action="" method="POST" onsubmit="return validateReferenceNumber(event)">
+                                {% csrf_token %}
+                                <input type="hidden" name="command-name" value="REQUEST">
+                                
+                                <label for="reference-number" class="reference-login__label">Already have a reference number?</label>
+                                <div class="d-flex">
+                                    <input type="number" id="reference-number" name="reference-number" class="form-control me-2 w-75 reference-login__input" placeholder="Enter your reference number">
+                                    <button type="submit" class="btn btn-primary w-25 reference-login__button">Submit</button>
+                                </div>
+
+                                <!-- Error Message -->
+                                <span id="reference-login__error-message" class="reference-login__error-message text-danger"></span>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="d-none d-md-block col-md-7"></div>
+        </div>
+        <hr>    
+        <div id="personalInfo" class="row g-4">
+            <div class="col-12 col-md-4">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">Alumni/Guest form</h5>
+                        <p class="card-text">Welcome, guest or alumni user! This form allows you to log in using your personal information which will generate a reference number. Please provide accurate details to verify your identity and access our services. All fields are required unless stated otherwise.</p>
+                        <p>If you have any issues or questions, please contact our support team.</p>
+
+                        <img src="{% static 'images/5836.jpg' %}" alt="Files" class="img-fluid mt-3">
+                    </div>
+                </div>
+                
+
+            </div>            
+            <div class="col-12 col-md-8">
+                <div class="card shadow">
+                    <div class="card-body" style="max-height: 80vh; overflow-y: auto; scrollbar-width: thin;">
+                        <div class="new-request-container">                            
+                            <form id="personal-info-form-element" method="POST" onsubmit="return submitPersonalInfoForm(event)">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="last-name" class="form-label">Last Name (Maiden Name if applicable):</label>
+                                    <input type="text" id="last-name" name="last_name" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="first-name" class="form-label">First Name:</label>
+                                    <input type="text" id="first-name" name="first_name" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="middle-name" class="form-label">Middle Name:</label>
+                                    <input type="text" id="middle-name" name="middle_name" class="form-control">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Are you currently employed?</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="working" id="working-yes" value="yes" required>
+                                        <label class="form-check-label" for="working-yes">Yes</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="working" id="working-no" value="no" required>
+                                        <label class="form-check-label" for="working-no">No</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3 hidden" id="work-details">
+                                    <label for="work-type" class="form-label">Type of Employment:</label>
+                                    <input type="text" id="work-type" name="work_type" class="form-control">
+                                    <label for="work-place" class="form-label">Place of Employment:</label>
+                                    <input type="text" id="work-place" name="work_place" class="form-control">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Residential Address:</label>
+                                    <input type="text" id="address" name="address" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="contact-no" class="form-label">Contact Number:</label>
+                                    <input type="text" id="contact-no" name="contact_no" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address:</label>
+                                    <input type="email" id="email" name="email" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="course" class="form-label">What course did you study?</label>
+                                    <input type="text" id="course" name="course" class="form-control" required>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <label for="entry-year-from" class="form-label">Year of Entry (From):</label>
+                                        <input type="number" id="entry-year-from" name="entry_year_from" class="form-control" required>
+                                    </div>
+                                    <div class="col">
+                                        <label for="entry-year-to" class="form-label">Year of Entry (To):</label>
+                                        <input type="number" id="entry-year-to" name="entry_year_to" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="year-graduated" class="form-label">Year of Graduation (Optional):</label>
+                                    <input type="number" id="year-graduated" name="year_graduated" class="form-control">
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Submit</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap Modal -->
+        <div class="modal fade" id="referenceNumberModal" tabindex="-1" aria-labelledby="referenceNumberModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="referenceNumberModalLabel">Reference Number</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Your reference number is: <span id="generated-reference-number"></span>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="redirectToDashboard()">Continue</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'footer.html' %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const workingYes = document.getElementById('working-yes');
+            const workingNo = document.getElementById('working-no');
+            const workDetails = document.getElementById('work-details');
+
+            workingYes.addEventListener('change', function() {
+                if (this.checked) {
+                    workDetails.classList.remove('hidden');
+                    workDetails.classList.remove('fade-out');
+                    workDetails.classList.add('fade-in');
+                }
+            });
+
+            workingNo.addEventListener('change', function() {
+                if (this.checked) {
+                    workDetails.classList.remove('fade-in');
+                    workDetails.classList.add('fade-out');
+                    setTimeout(() => {
+                        workDetails.classList.add('hidden');
+                    }, 500); // Match the duration of the fade-out animation
+                }
+            });
+        });
+
+        function validateReferenceNumber(event) {
+            event.preventDefault();
+            let referenceInput = document.getElementById('reference-number');
+            let errorMessage = document.getElementById('reference-login__error-message');
+            
+            if (referenceInput.value.trim() === '') {
+                showToast('Please enter a reference number.', 'error');
+                return false; // Prevent form submission
+            }
+
+            if (referenceInput.value.length != 10){
+                showToast('Please enter your 10-digit reference number.', 'error');
+                return false;
+            }
+
+            errorMessage.textContent = '';
+
+            // Submit the form via AJAX
+            let form = document.getElementById('reference-login-form');
+            let formData = new FormData(form);
+
+            fetch("", {
+                method: "POST",
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+            return false;
+        }
+
+        function showToast(message, type = 'error') {
+            let backgroundColor = type === 'success' ? '#007bff' : '#ff0000'; // Blue for success, red for error
+            Toastify({
+                text: message,
+                duration: 3000, // Duration in milliseconds
+                close: true, // Show close button
+                gravity: "top", // Position: top or bottom
+                position: "right", // Position: left, center or right
+                backgroundColor: backgroundColor, // Background color
+            }).showToast();
+        }
+
+        function submitPersonalInfoForm(event) {
+            event.preventDefault();
+            let form = document.getElementById('personal-info-form-element');
+            let formData = new FormData(form);
+
+            fetch("{% url 'create_request' %}", {
+                method: "POST",
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status) {
+                    document.getElementById('generated-reference-number').textContent = data.reference_number;
+                    let referenceNumberModal = new bootstrap.Modal(document.getElementById('referenceNumberModal'));
+                    referenceNumberModal.show();
+                    form.reset();
+                    showToast('Request created successfully.', 'success');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function closeModal() {
+            document.getElementById('referenceNumberModal').style.display = "none";
+        }
+
+        function redirectToDashboard() {
+            window.location.href = "{% url 'user_dashboard' %}";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Request Analytics</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        {% load static %}
+        {% include 'header.html' %}
+        
+        <!-- Tabulator CSS -->
+        <link href="https://unpkg.com/tabulator-tables@5.4.4/dist/css/tabulator.min.css" rel="stylesheet">
+        <link href="https://unpkg.com/tabulator-tables@5.4.4/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
+        
+        <!-- Chart.js for charts -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        
+        <!-- For PDF export -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
+        
+        <!-- For XLSX export -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+        
+        <!-- Add this in the head section, after the other CSS links -->
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+        
+        <style>
+            /* Analytics styling */
+            .card {
+                box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+                margin-bottom: 20px;
+            }
+            
+            .card-header {
+                font-weight: 500;
+                background-color: #f8f9fc;
+                border-bottom: 1px solid #e3e6f0;
+            }
+            
+            /* Tabulator styling improvements */
+            .tabulator {
+                font-size: 0.9rem;
+                border: 1px solid #dee2e6;
+                border-radius: 0.25rem;
+                overflow: hidden;
+            }
+            
+            .tabulator-col-title {
+                font-weight: 600;
+                color: #495057;
+            }
+            
+            .tabulator-row:hover {
+                background-color: rgba(0,123,255,0.05) !important;
+            }
+            
+            /* Status styling */
+            .status-pending {
+                color: white;
+                background-color: #ffc107;
+                border-radius: 4px;
+                padding: 3px 6px;
+                font-size: 0.8rem;
+                display: inline-block;
+            }
+            
+            .status-processing {
+                color: white;
+                background-color: #0d6efd;
+                border-radius: 4px;
+                padding: 3px 6px;
+                font-size: 0.8rem;
+                display: inline-block;
+            }
+            
+            .status-completed {
+                color: white;
+                background-color: #198754;
+                border-radius: 4px;
+                padding: 3px 6px;
+                font-size: 0.8rem;
+                display: inline-block;
+            }
+            
+            .status-rejected {
+                color: white;
+                background-color: #dc3545;
+                border-radius: 4px;
+                padding: 3px 6px;
+                font-size: 0.8rem;
+                display: inline-block;
+            }
+            
+            /* Filter inputs */
+            .date-filter-container {
+                margin-bottom: 15px;
+            }
+            
+            /* Status filters */
+            .status-filters {
+                margin-bottom: 15px;
+            }
+            
+            .status-filter {
+                font-size: 0.8rem;
+                margin-right: 8px;
+                padding: 5px 10px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            
+            .status-filter.active {
+                transform: scale(1.1);
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            }
+            
+            /* Export buttons */
+            .table-controls {
+                margin-bottom: 15px;
+            }
+            
+            .export-button {
+                margin-right: 5px;
+            }
+            
+            /* Processing times container */
+            #processingTimes {
+                max-height: 400px;
+                overflow-y: auto;
+            }
+        </style>
+    </head>
+    <body class="sb-nav-fixed">
+        <div id="layoutSidenav">
+            {% include 'admin/admin-topnav.html' %}
+            {% include 'admin/admin-sidenav.html' %}
+
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4">
+                        <h1 class="mt-4">Summary & Analytics</h1>
+                        
+                        <ul class="nav nav-tabs" id="analyticsTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="request-data-tab" data-bs-toggle="tab" data-bs-target="#request-data" type="button" role="tab" aria-controls="request-data" aria-selected="true">Summary Report</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="charts-tab" data-bs-toggle="tab" data-bs-target="#charts" type="button" role="tab" aria-controls="charts" aria-selected="false">Charts</button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="analyticsTabContent">
+                            <!-- Request Data Tab -->
+                            <div class="tab-pane fade show active" id="request-data" role="tabpanel" aria-labelledby="request-data-tab">
+                                <div class="card mb-4 mt-3">
+                                    <div class="card-header">
+                                        <i class="fas fa-table me-1"></i>
+                                        Detailed Request Information
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Date range filter -->
+                                        <div class="row date-filter-container">
+                                            <div class="col-md-4">
+                                                <label for="dateFrom" class="form-label small">From Date:</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                                    <input type="date" id="dateFrom" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="dateTo" class="form-label small">To Date:</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                                    <input type="date" id="dateTo" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 d-flex align-items-end">
+                                                <button id="applyDateFilter" class="btn btn-primary me-2">
+                                                    <i class="fas fa-filter"></i> Apply
+                                                </button>
+                                                <button id="clearDateFilter" class="btn btn-outline-secondary">
+                                                    <i class="fas fa-undo"></i> Clear
+                                                </button>
+                                            </div>
+                                        </div>                                
+                                        
+                                        <!-- Table controls -->
+                                        <div class="table-controls d-flex justify-content-between mb-3">
+                                            <div class="export-buttons">
+                                                <button id="export-csv" class="btn btn-sm btn-secondary export-button">
+                                                    <i class="fas fa-file-csv"></i> CSV
+                                                </button>
+                                                <button id="export-excel" class="btn btn-sm btn-success export-button">
+                                                    <i class="fas fa-file-excel"></i> Excel
+                                                </button>
+                                                <button id="export-pdf" class="btn btn-sm btn-danger export-button">
+                                                    <i class="fas fa-file-pdf"></i> PDF
+                                                </button>
+                                            </div>
+                                            <div class="search-container">
+                                                <div class="input-group">
+                                                    <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search records...">
+                                                    <button class="btn btn-sm btn-primary" type="button" id="searchButton">
+                                                        <i class="fas fa-search"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        
+                                        <!-- Table container -->
+                                        <div id="requestTable"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Charts Tab -->
+                            <div class="tab-pane fade" id="charts" role="tabpanel" aria-labelledby="charts-tab">
+                                <div class="row mb-4 mt-3">
+                                    <div class="col-md-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                                            <select id="timeFilter" class="form-select">
+                                                <option value="day">Last 24 Hours</option>
+                                                <option value="week" selected>Last Week</option>
+                                                <option value="month">Last Month</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="card">
+                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <i class="fas fa-chart-pie me-1"></i>
+                                                    Most Requested Documents
+                                                </div>
+                                                <div class="chart-export-buttons">
+                                                    <button id="export-chart-csv" class="btn btn-sm btn-secondary">
+                                                        <i class="fas fa-file-csv"></i> CSV
+                                                    </button>
+                                                    <button id="export-chart-excel" class="btn btn-sm btn-success">
+                                                        <i class="fas fa-file-excel"></i> Excel
+                                                    </button>
+                                                    <button id="export-chart-pdf" class="btn btn-sm btn-danger">
+                                                        <i class="fas fa-file-pdf"></i> PDF
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <canvas id="documentChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-lg-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <i class="fas fa-clock me-1"></i>
+                                                Processing Times
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="processingTimes"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright © Academic File Request System 2024</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                ·
+                                <a href="#">Terms & Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+        
+        <!-- Tabulator JS -->
+        <script src="https://unpkg.com/tabulator-tables@5.4.4/dist/js/tabulator.min.js"></script>
+        
+        <!-- Moment.js for date handling -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+        
+        <!-- Custom analytics JavaScript -->
+        <script src="{% static 'js/analytics.js' %}"></script>
+    </body>
+</html>

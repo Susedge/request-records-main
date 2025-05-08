@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>View Request</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+        {% include 'header.html' %}
+        {% load static %}
+    </head>
+    <body class="sb-nav-fixed">
+        {% include 'admin/admin-topnav.html' %}
+        <div id="layoutSidenav">
+            
+            {% include 'admin/admin-sidenav.html' %}
+
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4">
+                        <h1 class="mt-4">View user requests</h1>
+                        <ol class="breadcrumb mb-4">
+                            <li class="breadcrumb-item active">User request status and information</li>
+                        </ol>
+                        
+                        {% if user_request %}
+                        <div class="row">
+                            <!-- Left Card - User Info -->
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fs-6"> <i class="fa fa-info-circle" aria-hidden="true"></i> Request Information</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row border-bottom">
+                                            <div class="col-md-12">
+                                                <h6 class="fw-bold">Student Number:
+                                                    <span class="fw-normal fs-6 mb-2">{{ user_request.user.student_number }}</span>
+                                                </h6>
+                                                <h6 class="fw-bold">Status:
+                                                    <span id="requestStatus" class="fw-normal fs-6 mb-2">{{ user_request.status }}</span>
+                                                </h6>
+                                                <h6 class="fw-bold">Approval Status:
+                                                    <span id="approvalStatus" class="fw-normal fs-6 mb-2">
+                                                        {% if user_request.approved %}
+                                                            <span class="badge bg-success">Approved</span>
+                                                        {% else %}
+                                                            <span class="badge bg-warning">Pending Approval</span>
+                                                        {% endif %}
+                                                    </span>
+                                                </h6>
+                                                <h6 class="fw-bold">Purpose:
+                                                    <span id="requestPurpose" class="fw-normal fs-6 mb-2">{{ user_request.purpose}}</span>
+                                                </h6>
+                                                <h6 class="fw-bold">Price:
+                                                    <span id="requestPrice" class="badge bg-primary">₱{{ user_request.request.price }}</span>
+                                                </h6>
+                                                <h6 class="fw-bold">Number of Copies:
+                                                    <span class="fw-normal fs-6 mb-2">{{ user_request.number_of_copies }}</span>
+                                                </h6>
+                                                {% if user_request.authorization_letter or user_request.has_authorization_letter %}
+                                                <h6 class="fw-bold">Authorization Letter:</h6>
+                                                {% if user_request.has_authorization_letter %}
+                                                    <a href="{% url 'download_authorization_letter' user_request.id %}" class="btn btn-sm btn-primary">
+                                                        <i class="fas fa-download"></i> Download Authorization Letter
+                                                    </a>
+                                                {% else %}
+                                                    <span class="text-muted">No authorization letter uploaded</span>
+                                                {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="row border-bottom mt-2">
+                                            <div class="col-md-12">
+                                                <h6 class="fw-bold">Pickup Schedule:
+                                                    <span class="fw-normal fs-6 mb-2">{{ user_request.schedule|date:"F d, Y H:i" }}</span>
+                                                </h6>
+                                                <h6 class="fw-bold">Expected Release Date:
+                                                    <span class="fw-normal fs-6 mb-2">{{ user_request.date_release|date:"F d, Y" }}</span>
+                                                </h6>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-md-12">
+                                                <h6 class="fw-bold mb-3">Required Documents:</h6>
+                                                <ul class="list-group">
+                                                    {% for req_code in user_request.request.files_required_as_list %}
+                                                        <li class="list-group-item">{{ req_code }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                                
+                                                {% if uploads %}
+                                                <h6 class="fw-bold mt-3 mb-2">Submitted requirements:</h6>
+                                                <ul class="list-group">
+                                                    {% for upload in uploads %}
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                        {{ upload.code }}
+                                                        <a href="{% static upload.path %}" download class="btn btn-primary btn-sm">Download</a>
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Card - Approval Request (for unapproved requests) -->
+                            {% if not user_request.approved %}
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fs-6"> <i class="fa fa-check-circle" aria-hidden="true"></i> Request Approval</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle"></i> This request needs your approval. After approval, the user will be notified to provide the required documents.
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="processingTime" class="form-label fw-bold">Processing Time (days):</label>
+                                            <input type="number" class="form-control" id="processingTime" min="1" max="30" value="3">
+                                            <small class="form-text text-muted">Estimated days to process this request</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="remarks" class="form-label fw-bold">Remarks to User:</label>
+                                            <textarea class="form-control" id="remarks" rows="3" placeholder="Enter any instructions or notes for the user"></textarea>
+                                        </div>
+                                        
+                                        <div class="d-grid gap-2">
+                                            <button class="btn btn-success" onclick="approveRequest('{{user_request.id}}')">
+                                                <i class="fas fa-check-circle"></i> Approve Request
+                                            </button>
+                                            <button class="btn btn-danger" onclick="declineRequest('{{user_request.id}}')">
+                                                <i class="fas fa-times-circle"></i> Decline Request
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Card - Status Update (for already approved requests) -->
+                            {% else %}
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fs-6"> <i class="fa fa-edit" aria-hidden="true"></i> Update Status</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="newStatus" class="form-label fw-bold">Status:</label>
+                                            <select class="form-select" id="newStatus">
+                                                <option value="Processing" {% if user_request.status == "Processing" %}selected{% endif %}>Processing</option>
+                                                <option value="For Pickup" {% if user_request.status == "For Pickup" %}selected{% endif %}>For Pickup</option>
+                                                <option value="Completed" {% if user_request.status == "Completed" %}selected{% endif %}>Completed</option>
+                                                <option value="Declined" {% if user_request.status == "Declined" %}selected{% endif %}>Declined</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="pickupSchedule" class="form-label fw-bold">Pickup Schedule:</label>
+                                            <input type="datetime-local" class="form-control" id="pickupSchedule" name="pickupSchedule" 
+                                                   value="{% if user_request.schedule %}{{ user_request.schedule|date:'Y-m-d\TH:i' }}{% endif %}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="dateRelease" class="form-label fw-bold">Expected Release Date:</label>
+                                            <input type="datetime-local" class="form-control" id="dateRelease" name="dateRelease"
+                                                   value="{% if user_request.date_release %}{{ user_request.date_release|date:'Y-m-d\TH:i' }}{% endif %}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="requestedFile" class="form-label fw-bold">Upload Processed File:</label>
+                                            <div class="d-flex gap-2">
+                                                <input type="file" class="form-control" id="requestedFile" name="file">
+                                                {% if user_request.requested %}
+                                                    <a href="{% static user_request.requested %}" download class="btn btn-success">Download</a>
+                                                {% endif %}
+                                            </div>
+                                            <small class="form-text text-muted">Upload the processed document here</small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="updateRemarks" class="form-label fw-bold">Update Remarks:</label>
+                                            <textarea class="form-control" id="updateRemarks" rows="3" placeholder="Enter any additional remarks or notes"></textarea>
+                                        </div>
+                                        <button class="btn btn-primary" id="saveStatusBtn" onclick="updateRequest('{{user_request.id}}')">Save Changes</button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </main>
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright © Academic File Request System 2024</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                ·
+                                <a href="#">Terms & Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}     
+        <script>
+            function showToast(options){
+                let toast = Toastify({
+                    text: options.message,
+                    duration: options.duration || 3000,
+                    newWindow: true,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    stopOnFocus: true,
+                    style: {
+                        background: options.color,
+                    },
+                });
+
+                toast.showToast();
+            }
+
+            function approveRequest(id) {
+                var csrftoken = getCookie('csrftoken');
+                let formData = new FormData();
+                
+                formData.append('action', 'approve');
+                formData.append('new_status', 'Processing');
+                formData.append('approved', 'true');
+                formData.append('processing_time', document.getElementById("processingTime").value);
+                
+                const remarks = document.getElementById("remarks").value;
+                if (remarks) {
+                    formData.append('remarks', remarks);
+                }
+                
+                $.ajax({
+                    type: 'POST',
+                    url: '/admin-panel/user-request/' + id,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    },
+                    success: function(response) {
+                        showToast({
+                            'message': 'Request approved successfully! The user will be notified to upload required documents.',
+                            'color': '#008000'
+                        });
+
+                        // Refresh the page after short delay
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    },
+                    error: function(xhr, errmsg, err) {
+                        console.log(errmsg);
+                        showToast({
+                            'message': 'An error occurred. Please try again.',
+                            'color': '#FF0000'
+                        });
+                    }
+                });
+            }
+            
+            function declineRequest(id) {
+                var csrftoken = getCookie('csrftoken');
+                let formData = new FormData();
+                
+                formData.append('action', 'decline');
+                formData.append('new_status', 'Declined');
+                
+                const remarks = document.getElementById("remarks").value;
+                if (remarks) {
+                    formData.append('remarks', remarks);
+                } else {
+                    showToast({
+                        'message': 'Please provide remarks explaining why the request was declined.',
+                        'color': '#FF0000'
+                    });
+                    return;
+                }
+                
+                $.ajax({
+                    type: 'POST',
+                    url: '/admin-panel/user-request/' + id,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    },
+                    success: function(response) {
+                        showToast({
+                            'message': 'Request declined. The user will be notified.',
+                            'color': '#008000'
+                        });
+
+                        // Redirect back to user requests list
+                        setTimeout(() => {
+                            window.location.href = '/admin-panel/user-request/';
+                        }, 2000);
+                    },
+                    error: function(xhr, errmsg, err) {
+                        console.log(errmsg);
+                        showToast({
+                            'message': 'An error occurred. Please try again.',
+                            'color': '#FF0000'
+                        });
+                    }
+                });
+            }
+
+            function updateRequest(id) {
+                var csrftoken = getCookie('csrftoken');
+                let formData = new FormData();
+                
+                const newStatus = document.getElementById("newStatus").value;
+                formData.append('new_status', newStatus);
+                
+                // Check if we need to mark as completed and have a file
+                if (newStatus === "Completed") {
+                    const requestedFile = document.getElementById("requestedFile").files[0];
+                    if (!requestedFile && !document.querySelector("a[href].btn-success")) {
+                        showToast({
+                            'message': 'Please upload a file before marking as Completed.',
+                            'color': '#FF0000'
+                        });
+                        return;
+                    }
+                }
+                
+                // Add pickup schedule if provided
+                if (document.getElementById("pickupSchedule").value) {
+                    formData.append('pickupSchedule', document.getElementById("pickupSchedule").value);
+                }
+                
+                // Add release date if provided
+                if (document.getElementById("dateRelease").value) {
+                    formData.append('dateRelease', document.getElementById("dateRelease").value);
+                }
+                
+                // Add remarks if provided
+                const updateRemarks = document.getElementById("updateRemarks").value;
+                if (updateRemarks) {
+                    formData.append('remarks', updateRemarks);
+                }
+                
+                // Add file if provided
+                const requestedFile = document.getElementById("requestedFile").files[0];
+                if (requestedFile) {
+                    formData.append('requested_file', requestedFile);
+                }
+                
+                $.ajax({
+                    type: 'POST',
+                    url: '/admin-panel/user-request/' + id,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    },
+                    success: function(response) {
+                        showToast({
+                            'message': response.message || 'Request updated successfully!',
+                            'color': response.status ? '#008000' : '#FF0000'
+                        });
+
+                        if (response.status) {
+                            // Refresh the page to show updated information
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 2000);
+                        }
+                    },
+                    error: function(xhr, errmsg, err) {
+                        console.log(errmsg);
+                        showToast({
+                            'message': 'An error occurred. Please try again.',
+                            'color': '#FF0000'
+                        });
+                    }
+                });
+            }
+
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            
+            // Disable all input fields when status is Completed
+            document.addEventListener('DOMContentLoaded', function() {
+                const currentStatus = document.getElementById("requestStatus").textContent.trim();
+                if (currentStatus === "Completed") {
+                    const allInputs = document.querySelectorAll("select, input, textarea");
+                    allInputs.forEach(input => {
+                        input.setAttribute("disabled", true);
+                    });
+                    
+                    const saveButton = document.getElementById("saveStatusBtn");
+                    if (saveButton) {
+                        saveButton.setAttribute("disabled", true);
+                    }
+                    
+                    showToast({
+                        'message': 'Request is completed. No further changes allowed.',
+                        'color': '#008000'
+                    });
+                }
+            });
+        </script>    
+    </body>
+</html>

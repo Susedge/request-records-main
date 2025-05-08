@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+
+        {% include 'header.html' %}
+
+        <style>
+            p {
+                padding: 0;
+                margin: 0;
+            }
+        </style>
+    </head>
+    <body>
+        {% if user and requested_document %}
+            <main class="container">
+                <h2>Payment Details</h2>
+                <table class="table">
+                    <input type="hidden" id="user_request" value="{{ requested_document.id }}">
+                    <tbody>
+                        <tr>
+                            <td>Payment Method:</td>
+                            <td><span class="badge bg-primary">GCASH</span></td>
+                        </tr>
+                        <tr>
+                            <td>Student Number</td>
+                            <td><span class="badge bg-light text-dark">{{ user.student_number }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>Order Info</td>
+                            <td><span class="badge bg-light text-dark">{{ requested_document.request.document }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>Order Amount</td>
+                            <td><span class="badge bg-light text-dark">₱{{ requested_document.request.price }}</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <hr>
+                <div class="qr-container row justify-content-center">
+                    <img src="{% static 'assets/qr_codes/gcash.jpg' %}" alt="GCASH" style="width: 350px; height: 300px;">
+                    <p>Please scan the QR code with a GCASH payment app. Once you've completed this transaction you will be notified if an admin has already processed your request.</p>
+                </div>
+                <hr>
+                <h5>Upload your receipt here:</h5>
+                <div class="receipt-container row" style="gap: 10px;">
+                    <input type="file" id="inputPayment" name="payment" style="padding-left: 20px;" required>
+                    <button type="button" id="btnSubmitReceipt" class="btn btn-primary" style="width: 200px; margin-left: 20px;">Submit Receipt</button>
+                </div>
+            </main>
+        {% endif %}
+        
+        <script>
+            let btnSubmitReceipt = document.querySelector("#btnSubmitReceipt");
+
+            btnSubmitReceipt.addEventListener("click", function(event) {
+                var csrftoken = getCookie('csrftoken');
+                let user_request_id = document.querySelector("#user_request")
+                const files = document.querySelectorAll('input[type="file"]');
+
+                if (files[0].files.length === 0) {
+                    window.close();
+                    return;
+                }
+                
+                // Check file size before proceeding
+                if (!validateFileSize(files[0].files[0])) {
+                    return;
+                }
+
+                // Create form data
+                var formData = new FormData();
+
+                files.forEach((file, index) => {
+                    // Append each file to the FormData object
+                    formData.append('payment', file.files[0]);
+                });
+
+                if (files[0].files.length === 0) {
+                    window.close();
+                    return;
+                }
+
+                // Send AJAX POST request
+                $.ajax({
+                    type: 'POST',
+                    url: '/request/checkout/' + user_request_id.value, // Replace with your Django URL
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    },
+                    success: function(response) {
+                        showToast({
+                            'message': response.message,
+                            'color': '#008000',
+                            'duration': 3000,
+                        });
+
+                        // Disable controls
+                        let inputPayment = document.querySelector("#inputPayment");
+                        inputPayment.disabled = true;
+                        btnSubmitReceipt.disabled = true;
+
+                        setTimeout(function () {
+                            window.close();         
+                        }, 4000);
+                    },
+                    error: function(xhr, errmsg, err) {
+                        console.log(errmsg);
+                    }
+                });
+            });
+
+            // Function to get CSRF cookie value
+            function getCookie(name) {
+                var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = cookies[i].trim();
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                return cookieValue;
+            }
+
+            function showToast(options) {
+                let toast = Toastify({
+                    text: options.message,
+                    duration: 2000,
+                    newWindow: true,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    stopOnFocus: true,
+                    style: {
+                        background: options.color,
+                    },
+                });
+
+                toast.showToast();
+            }
+
+            function validateFileSize(file) {
+                const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB in bytes
+                
+                if (file && file.size > MAX_FILE_SIZE) {
+                    showToast({
+                        message: `Receipt file exceeds 25MB limit`,
+                        color: '#FF0000'
+                    });
+                    return false;
+                }
+                return true;
+            }
+
+        </script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    </body>
+</html>

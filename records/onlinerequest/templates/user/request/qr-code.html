@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document QR Code</title>
+    {% include 'header.html' %}
+    <style>
+        .qr-container {
+            text-align: center;
+            padding: 20px;
+        }
+        .qr-image {
+            margin: 20px auto;
+        }
+        .button-group {
+            margin-top: 20px;
+            gap: 10px;
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="qr-container">
+            <h3>Document Verification QR Code</h3>
+            <div class="qr-image">
+                <img id="qrImage" src="data:image/png;base64,{{ qr_code }}" alt="QR Code"/>
+            </div>
+            <p>Scan this QR code to verify the document</p>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="downloadQR()">Download QR</button>
+                <button class="btn btn-secondary" onclick="window.close()">Close</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function downloadQR() {
+            const link = document.createElement('a');
+            link.download = '{{ document_name }}-qr.png';
+            link.href = document.getElementById('qrImage').src;
+            link.click();
+        }
+    </script>
+  </body>
+</html>

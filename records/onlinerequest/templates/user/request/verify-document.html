@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Document Verification</title>
+    <style>
+        .verification-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .verification-header {
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+        .verification-details {
+            text-align: left;
+            margin: 20px;
+        }
+        .verification-seal {
+            color: green;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <h2 class="verification-header">Document Verification</h2>
+        <div class="verification-details">
+            <p><strong>Document:</strong> {{ document_name }}</p>
+            <p><strong>Student Number:</strong> {{ student_number }}</p>
+            <p><strong>Verification Date:</strong> {{ verification_date }}</p>
+            <p><strong>Issuing System:</strong> {{ system_name }}</p>
+        </div>
+        <div class="verification-seal">
+            ✓ This document is verified authentic by {{ system_name }}
+        </div>
+    </div>
+</body>
+</html>

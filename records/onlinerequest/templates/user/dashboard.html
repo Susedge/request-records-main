@@ -1,0 +1,205 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>Dashboard - User</title>
+        {% include 'header.html' %}
+        <style>
+            body {
+                background-color: #f8f9fa;
+            }
+            
+            .dashboard-header {
+                background-color: #343a40;
+                color: white;
+                padding: 20px 0;
+                margin-bottom: 30px;
+                border-radius: 0 0 10px 10px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            
+            .dashboard-title {
+                font-size: 2.5rem;
+                margin-bottom: 10px;
+            }
+            
+            .dashboard-subtitle {
+                font-size: 1.2rem;
+                opacity: 0.8;
+            }
+            
+            .profile-card {
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                border: none;
+                overflow: hidden;
+                margin-bottom: 30px;
+                background-color: #ffffff;
+            }
+            
+            .profile-header {
+                background-color: #4e73df;
+                color: white;
+                border-bottom: 1px solid #e3e6f0;
+                border-radius: 10px 10px 0 0;
+                padding: 20px;
+            }
+            
+            .profile-content {
+                padding: 25px;
+                background-color: #ffffff;
+            }
+            
+            .status-badge {
+                padding: 8px 15px;
+                border-radius: 20px;
+                font-size: 0.9rem;
+                font-weight: 600;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+            
+            .status-active {
+                background-color: #1cc88a;
+                color: white;
+            }
+            
+            .status-pending {
+                background-color: #f6c23e;
+                color: #533f03;
+            }
+            
+            .user-type-badge {
+                display: inline-block;
+                padding: 8px 15px;
+                border-radius: 20px;
+                font-size: 0.9rem;
+                background-color: #36b9cc;
+                color: white;
+                margin-right: 10px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+            
+            .info-section {
+                background-color: #f8f9fc;
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .info-title {
+                color: #5a5c69;
+                font-size: 1.1rem;
+                font-weight: 700;
+                border-bottom: 2px solid #e3e6f0;
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+            }
+            
+            .alert-card {
+                background-color: #fff3cd;
+                border-left: 5px solid #f6c23e;
+                color: #533f03;
+                padding: 15px;
+                border-radius: 5px;
+                margin-top: 20px;
+            }
+        </style>
+    </head>
+
+    <body class="sb-nav-fixed">
+          {% include 'user/user-topnav.html' %}
+
+          <div id="layoutSidenav">
+            
+              {% include 'user/user-sidenav.html' %}
+
+              <div id="layoutSidenav_content">
+                  <main>
+                      <!-- Dashboard Header -->
+                      <div class="dashboard-header">
+                          <div class="container-fluid px-4">
+                              <h1 class="dashboard-title">Welcome, {{ user_record.first_name|default:'Username' }} {{ user_record.last_name|default:'' }}!
+                            </h1>
+                              <p class="dashboard-subtitle">View your account information and status</p>
+                          </div>
+                    </div>
+                    
+                    <div class="container-fluid px-4">
+                        <!-- Profile Card -->
+                        <div class="row">
+                            <div class="col-xl-8 col-lg-10">
+                                <div class="profile-card mb-4">
+                                    <div class="profile-header d-flex justify-content-between align-items-center">
+                                        <h4 class="m-0"><i class="fas fa-user-circle me-2"></i>Your Profile</h4>
+                                        <span class="status-badge {% if request.user.is_active %}status-active{% else %}status-pending{% endif %}">
+                                            {% if request.user.is_active %}
+                                                <i class="fas fa-check-circle me-1"></i> Account Active
+                                            {% else %}
+                                                <i class="fas fa-clock me-1"></i> Pending Approval
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="profile-content">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="info-section mb-3">
+                                                    <h5 class="info-title"><i class="fas fa-id-card me-2"></i>Account Information</h5>
+                                                    <div class="mb-3">
+                                                        <span class="user-type-badge">
+                                                            <i class="fas fa-user-tag me-1"></i> {{ request.user.get_user_type_display|title }}
+                                                        </span>
+                                                    </div>
+                                                    <p class="mb-2"><strong>Student/ID Number:</strong> {{ request.user.student_number }}</p>
+                                                    <p class="mb-2"><strong>Email:</strong> {{ request.user.email }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="info-section mb-3">
+                                                    <h5 class="info-title"><i class="fas fa-address-card me-2"></i>Personal Information</h5>
+                                                    {% if user_record %}
+                                                        <p class="mb-2"><strong>Name:</strong> {{ user_record.first_name }} {{ user_record.middle_name }} {{ user_record.last_name }}</p>
+                                                        <p class="mb-2"><strong>Course Code:</strong> {{ user_record.course_code }}</p>
+                                                        <p class="mb-2"><strong>Contact:</strong> {{ user_record.contact_no }}</p>
+                                                        <p class="mb-2"><strong>Year:</strong> {{ user_record.entry_year_from }} - {{ user_record.entry_year_to }}</p>
+                                                    {% else %}
+                                                        <p class="text-muted"><i class="fas fa-info-circle me-2"></i>Profile information will be available after account approval.</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>                                            
+                                        </div>
+                                        
+                                        {% if not request.user.is_active %}
+                                        <div class="alert-card mt-3">
+                                            <i class="fas fa-exclamation-triangle me-2"></i> <strong>Important:</strong> Your account is pending administrator approval. You will receive an email with your login credentials once approved.
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright © Academic File Request System 2024</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                ·
+                                <a href="#">Terms & Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        
+        {% include 'footer.html' %}
+    </body>
+</html>

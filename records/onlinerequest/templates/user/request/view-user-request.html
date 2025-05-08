@@ -1,0 +1,474 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Requests</title>
+    
+    {% include 'header.html' %}
+</head>
+<body class="sb-nav-fixed">
+
+    {% include 'user/user-topnav.html' %}
+
+    <div id="layoutSidenav">
+        {% include 'user/user-sidenav.html' %}
+
+        <div id="layoutSidenav_content">
+            <main>
+                <div class="container-fluid px-4">
+                    <h1 class="mt-4">My requests</h1>
+                    <ol class="breadcrumb mb-4">
+                        <li class="breadcrumb-item active">List of your requests and their current status</li>
+                    </ol>
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fs-6">Requests</span>
+                            </div>
+                        </div>
+                        <div class="card-body">                         
+
+                            <table id="datatable">
+                                <thead>
+                                    <th>Document</th>
+                                    <th>Date Created</th>
+                                    <th>Status</th>
+                                    <th>Approval</th>
+                                    <th>Actions</th>
+                                </thead>
+                                <tbody>
+                                {% if user_requests %}
+                                    {% for user_request in user_requests %}
+                                        <tr>
+                                            <td>{{ user_request.request }}</td>
+                                            <td>{{ user_request.created_at|date:"F d, Y h:i A" }}</td>
+                                            <td>{{ user_request.status }}</td>
+                                            <td>
+                                                {% if user_request.approved %}
+                                                    <span class="badge bg-success">Approved</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Pending Approval</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if user_request.approved %}
+                                                    {% if user_request.status == "For Pickup" or user_request.status == "for pickup" or user_request.status == "pickup" or user_request.status == "PICKUP" %}
+                                                        <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#infoModal{{ user_request.id }}">For Pickup - View Info</button>
+                                                    {% elif user_request.status == "Completed" and user_request.requested %}
+                                                        <a class="btn btn-primary btn-sm" href="{% static user_request.requested %}" download>Download</a>
+                                                        <button class="btn btn-secondary btn-sm" onclick="generateQR('{{ user_request.id }}')">Generate QR</button>
+                                                    {% elif user_request.status == "Completed" %}
+                                                        <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#infoModal{{ user_request.id }}">Completed - View Info</button>
+                                                    {% elif user_request.status == "Processing" %}
+                                                        <button class="btn btn-primary btn-sm" onclick="showRequirements('{{ user_request.id }}')">Upload Requirements</button>
+                                                    {% else %}
+                                                        <span class="text-muted">In process</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">Waiting for approval</span>
+                                                {% endif %}
+                                                
+                                                {% if user_request.status == "Declined" %}
+                                                    <span class="badge bg-danger">Declined</span>
+                                                {% endif %}
+                                            </td>                                                                                 
+                                        </tr>
+                                        
+                                        
+                                        <!-- Modal -->
+                                        <div class="modal fade" id="infoModal{{ user_request.id }}" tabindex="-1" aria-labelledby="infoModalLabel{{ user_request.id }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="infoModalLabel{{ user_request.id }}">Request Information</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="row">
+                                                            {% if user_request.status == "For Pickup" or user_request.status == "for pickup" or user_request.status == "pickup" or user_request.status == "PICKUP" %}
+                                                                <p><strong>Your request is now ready for pickup!</strong></p>
+                                                                <p>Please head to our registrar to pick-up the file you requested.</p>
+                                                            {% elif user_request.status == "Completed" and not user_request.requested %}
+                                                                <p><strong>Your request has been completed!</strong></p>
+                                                                <p>The document has been released on the date shown below.</p>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div>
+                                                            <p class="my-0"><strong>Order Number:</strong> {{ user_request.id }}</p>
+                                                            <p class="my-0"><strong>Paid Amount:</strong> {{ user_request.request.price }}</p>
+                                                            {% if user_request.schedule %}
+                                                            <p class="my-0"><strong>Pickup Schedule:</strong> {{ user_request.schedule|date:"F d, Y h:i A" }}</p>
+                                                            {% endif %}
+                                                            {% if user_request.date_release %}
+                                                            <p class="my-0"><strong>Release Date:</strong> {{ user_request.date_release|date:"F d, Y" }}</p>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="text-center mt-2" style="font-size: small; color: red; font-weight: 500;">
+                                                            <p>Reminder: Please bring your school ID or a copy of your Certificate of 
+                                                                Registration with the order number to receive your requested document</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Requirements Modal -->
+                                        <div class="modal fade" id="requirementsModal" tabindex="-1" aria-labelledby="requirementsModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="requirementsModalLabel">Upload Required Documents</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="alert alert-info" role="alert">
+                                                            <i class="fas fa-info-circle"></i> Please upload all required documents below. 
+                                                            Accepted formats: PDF, JPG, PNG.
+                                                        </div>
+                                                        
+                                                        <form id="requirementsForm" method="post" enctype="multipart/form-data">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" id="requestId" name="request_id" value="">
+                                                            <div id="requirementFields">
+                                                                <!-- Will be populated dynamically -->
+                                                            </div>
+                                                            <div class="mt-3 d-flex justify-content-end">
+                                                                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+                                                                <button type="button" class="btn btn-primary" onclick="submitRequirements()">
+                                                                    <i class="fas fa-upload"></i> Submit Documents
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                                </tbody>
+                            </table>
+                            
+                                                     
+                        </div>                            
+                        
+                    </div>
+                </div>
+            </main>
+            <footer class="py-4 bg-light mt-auto">
+                <div class="container-fluid px-4">
+                    <div class="d-flex align-items-center justify-content-between small">
+                        <div class="text-muted">Copyright © Academic File Request System 2024</div>
+                        <div>
+                            <a href="#">Privacy Policy</a>
+                            ·
+                            <a href="#">Terms & Conditions</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+
+    </div>
+
+    <footer class="py-4 bg-light mt-auto">
+        <div class="container-fluid px-4">
+            <div class="d-flex align-items-center justify-content-between small">
+                <div class="text-muted">Copyright © Academic File Request System 2024</div>
+                <div>
+                    <a href="#">Privacy Policy</a>
+                    ·
+                    <a href="#">Terms & Conditions</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    {% include 'footer.html' %}     
+    <script>
+        $('#datatable').DataTable({
+                responsive: true
+        });
+
+        function showToast(options) {
+            let toast = Toastify({
+                text: options.message,
+                duration: options.duration || 3000,
+                newWindow: true,
+                close: true,
+                gravity: "top",
+                position: "right",
+                stopOnFocus: true,
+                style: {
+                    background: options.color || "#007bff",
+                },
+            });
+
+            toast.showToast();
+        }
+
+        function showRequirements(requestId) {
+            // Clear previous fields
+            document.getElementById('requirementFields').innerHTML = '';
+            document.getElementById('requestId').value = requestId;
+            
+            console.log("Loading requirements for request ID:", requestId);
+            
+            // Get requirements for this request
+            $.ajax({
+                type: 'GET',
+                url: '/request/user/' + requestId + '/requirements/',
+                success: function(response) {
+                    console.log("Requirements response:", response);
+                    if (response.status && response.requirements && response.requirements.length > 0) {
+                        response.requirements.forEach(req => {
+                            let fileInputContainer = document.createElement("div");
+                            fileInputContainer.classList.add("mb-3");
+                            
+                            let fileLabel = document.createElement("label");
+                            fileLabel.setAttribute("for", req.code);
+                            fileLabel.textContent = req.description;
+                            fileLabel.classList.add("form-label");
+                            
+                            let fileInput = document.createElement("input");
+                            fileInput.setAttribute("type", "file");
+                            fileInput.setAttribute("id", req.code);
+                            fileInput.setAttribute("name", req.code); 
+                            fileInput.classList.add("form-control");
+                            fileInput.required = true;
+                            
+                            // Add a "required" visual indicator
+                            let requiredSpan = document.createElement("span");
+                            requiredSpan.className = "text-danger";
+                            requiredSpan.textContent = " *";
+                            fileLabel.appendChild(requiredSpan);
+                            
+                            // Add change event to detect when a file is selected
+                            fileInput.addEventListener('change', function() {
+                                if (this.files.length > 0) {
+                                    console.log(`File selected for ${req.code}: ${this.files[0].name}`);
+                                    this.classList.remove('is-invalid');
+                                    
+                                    // Remove any existing error messages
+                                    let parent = this.parentNode;
+                                    parent.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+                                }
+                            });
+                            
+                            fileInputContainer.appendChild(fileLabel);
+                            fileInputContainer.appendChild(fileInput);
+                            
+                            // Add a help text
+                            let helpText = document.createElement("small");
+                            helpText.className = "form-text text-muted";
+                            helpText.textContent = "Maximum file size: 25MB";
+                            fileInputContainer.appendChild(helpText);
+                            
+                            document.getElementById('requirementFields').appendChild(fileInputContainer);
+                        });
+                        
+                        // Show the modal
+                        let modal = new bootstrap.Modal(document.getElementById('requirementsModal'));
+                        modal.show();
+                    } else {
+                        showToast({
+                            message: response.message || 'No requirements found for this request.',
+                            color: '#FF0000'
+                        });
+                    }
+                },
+                error: function(xhr, errmsg, err) {
+                    console.log("Error loading requirements:", errmsg);
+                    showToast({
+                        message: 'Error loading requirements. Please try again.',
+                        color: '#FF0000'
+                    });
+                }
+            });
+        }
+
+        function submitRequirements() {
+            const requestId = document.getElementById('requestId').value;
+            
+            // Directly select file inputs by name attribute
+            const fileInputs = document.querySelectorAll('#requirementFields input[type="file"]');
+            
+            console.log("File inputs found:", fileInputs.length);
+            
+            // Check if any files were selected
+            let hasFiles = false;
+            let formData = new FormData();
+            
+            fileInputs.forEach(fileInput => {
+                console.log("Checking input:", fileInput.id, fileInput.name, "Has file:", fileInput.files.length > 0);
+                
+                if (fileInput.files && fileInput.files[0]) {
+                    console.log("Adding file:", fileInput.name, fileInput.files[0].name);
+                    formData.append(fileInput.name, fileInput.files[0]);
+                    hasFiles = true;
+                }
+            });
+            
+            if (!hasFiles) {
+                showToast({
+                    message: 'Please select at least one file to upload.',
+                    color: '#FF0000'
+                });
+                return;
+            }
+            
+            // Add the CSRF token
+            var csrftoken = getCookie('csrftoken');
+            
+            // Send data
+            $.ajax({
+                type: 'POST',
+                url: '/request/user/' + requestId + '/upload-requirements/',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRFToken': csrftoken
+                },
+                success: function(response) {
+                    console.log("Upload response:", response);
+                    if (response.status) {
+                        showToast({
+                            message: response.message || 'Requirements uploaded successfully!',
+                            color: '#28a745'
+                        });
+                        
+                        // Close modal and refresh page
+                        let modal = bootstrap.Modal.getInstance(document.getElementById('requirementsModal'));
+                        modal.hide();
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        showToast({
+                            message: response.message || 'Error uploading files',
+                            color: '#FF0000'
+                        });
+                    }
+                },
+                error: function(xhr, errmsg, err) {
+                    console.log("Error:", xhr.status, errmsg);
+                    showToast({
+                        message: 'Server error: ' + (xhr.responseJSON?.message || 'Please try again.'),
+                        color: '#FF0000'
+                    });
+                }
+            });
+        }
+
+        function validateFileInputs(files) {
+            let valid = true;
+            let emptyInputs = [];
+            
+            files.forEach(file => {
+                console.log("Validating:", file.name, "Has files:", file.files.length > 0);
+                
+                if (!file.files || file.files.length === 0) {
+                    valid = false;
+                    file.classList.add('is-invalid');
+                    
+                    // Find parent and add error message
+                    let parent = file.parentNode;
+                    let errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback';
+                    errorDiv.textContent = 'Please select a file';
+                    
+                    // Remove existing error messages
+                    parent.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+                    parent.appendChild(errorDiv);
+                    
+                    // Get the label text for better error reporting
+                    let label = parent.querySelector('label');
+                    if (label) {
+                        emptyInputs.push(label.textContent.trim());
+                    } else {
+                        emptyInputs.push(file.name);
+                    }
+                } else {
+                    file.classList.remove('is-invalid');
+                    // Remove any existing error messages
+                    let parent = file.parentNode;
+                    parent.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+                }
+            });
+            
+            if (!valid) {
+                showToast({
+                    message: 'Please upload files for: ' + emptyInputs.join(', '),
+                    color: '#FF0000'
+                });
+            }
+            
+            return valid;
+        }
+
+        function validateFileSize(files) {
+            const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB in bytes
+            let isValid = true;
+            
+            files.forEach(file => {
+                if (file.files[0] && file.files[0].size > MAX_FILE_SIZE) {
+                    showToast({
+                        message: `File ${file.files[0].name} exceeds 25MB limit`,
+                        color: '#FF0000'
+                    });
+                    isValid = false;
+                }
+            });
+            
+            return isValid;
+        }
+
+        function generateQR(requestId) {
+            return openNewTab(`/request/generate-qr/${requestId}/`, 700, 700);
+        }
+
+        function openNewTab(url, width, height) {
+            var leftPosition, topPosition;
+            leftPosition = (window.screen.width / 2) - (width / 2);
+            topPosition = (window.screen.height / 2) - (height / 2);
+
+            let openedWindow = window.open(url, "Window2",
+                "status=no,height=" + height + ",width=" + width + ",resizable=yes,left="
+                + leftPosition + ",top=" + topPosition + ",screenX=" + leftPosition + ",screenY="
+                + topPosition + ",toolbar=no,menubar=no,scrollbars=no,location=no,directories=no");
+
+            let intervalId = setInterval(function() {
+                if (openedWindow.closed) {
+                    clearInterval(intervalId);
+                    window.focus();
+                    window.location.reload(); // Reload the page after the window is closed
+                }
+            }, 500);
+
+            return true;
+        }
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

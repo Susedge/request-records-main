@@ -1,0 +1,84 @@
+<div class="modal-header">
+    <h5 class="modal-title" id="profileModalLabel">
+        {% if profile.record_type == 'new' %}
+        New User Profile
+        {% else %}
+        User Profile
+        {% endif %}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+    <form id="profileForm" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="user_id" id="user_id" value="{{ profile.user_id }}">
+        <input type="hidden" name="record_type" id="record_type" value="{{ profile.record_type }}">
+        
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="student_number" class="form-label">Student Number</label>
+                <input type="text" class="form-control" id="student_number" name="student_number" value="{{ profile.student_number }}" readonly>
+            </div>
+            <div class="col-md-8">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" value="{{ profile.email }}" readonly>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="first_name" class="form-label">First Name</label>
+                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ profile.first_name }}" required>
+            </div>
+            <div class="col-md-4">
+                <label for="middle_name" class="form-label">Middle Name</label>
+                <input type="text" class="form-control" id="middle_name" name="middle_name" value="{{ profile.middle_name }}">
+            </div>
+            <div class="col-md-4">
+                <label for="last_name" class="form-label">Last Name</label>
+                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ profile.last_name }}" required>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="course_code" class="form-label">Program</label>
+                <select class="form-select" id="course_code" name="course_code" required>
+                    <option value="">Select Program</option>
+                    {% for course in courses %}
+                    <option value="{{ course.code }}" {% if profile.course_code == course.code %}selected{% endif %}>{{ course.description }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="contact_no" class="form-label">Contact Number</label>
+                <input type="text" class="form-control" id="contact_no" name="contact_no" value="{{ profile.contact_no }}" required>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="entry_year_from" class="form-label">Entry Year (From)</label>
+                <input type="number" class="form-control" id="entry_year_from" name="entry_year_from" value="{{ profile.entry_year_from }}" required>
+            </div>
+            <div class="col-md-6">
+                <label for="entry_year_to" class="form-label">Entry Year (To)</label>
+                <input type="number" class="form-control" id="entry_year_to" name="entry_year_to" value="{{ profile.entry_year_to }}" required>
+            </div>
+        </div>
+        
+        {% if profile.record_type == 'temp_record' %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> This user has temporary record data. Saving will create a permanent record.
+        </div>
+        {% elif profile.record_type == 'new' %}
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> This user has no record data. Please fill in the details to create a new record.
+        </div>
+        {% endif %}
+    </form>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+    <button type="submit" form="profileForm" class="btn btn-primary">Save Changes</button>
+</div>

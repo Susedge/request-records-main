@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>User Management</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+
+        {% include 'header.html' %}
+        <style>
+            /* Copy styles directly from dashboard.html */
+            .profile-card {
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                border: none;
+                overflow: hidden;
+                margin-bottom: 30px;
+                background-color: #ffffff;
+            }
+            
+            .profile-header {
+                background-color: #4e73df;
+                color: white;
+                border-bottom: 1px solid #e3e6f0;
+                border-radius: 10px 10px 0 0;
+                padding: 20px;
+            }
+            
+            .profile-content {
+                padding: 25px;
+                background-color: #ffffff;
+            }
+            
+            .status-badge {
+                padding: 8px 15px;
+                border-radius: 20px;
+                font-size: 0.9rem;
+                font-weight: 600;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+            
+            .status-active {
+                background-color: #1cc88a;
+                color: white;
+            }
+            
+            .status-pending {
+                background-color: #f6c23e;
+                color: #533f03;
+            }
+            
+            .user-type-badge {
+                display: inline-block;
+                padding: 8px 15px;
+                border-radius: 20px;
+                font-size: 0.9rem;
+                background-color: #36b9cc;
+                color: white;
+                margin-right: 10px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+            
+            .info-section {
+                background-color: #f8f9fc;
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .info-title {
+                color: #5a5c69;
+                font-size: 1.1rem;
+                font-weight: 700;
+                border-bottom: 2px solid #e3e6f0;
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+            }
+        </style>
+    </head>
+    <body class="sb-nav-fixed">
+        <div id="layoutSidenav">
+            
+            {% include 'admin/admin-topnav.html' %}
+            {% include 'admin/admin-sidenav.html' %}
+
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4">
+                        <h1 class="mt-4">User Management</h1>
+                        <ol class="breadcrumb mb-4">
+                            <li class="breadcrumb-item active">Manage user profiles and records</li>
+                        </ol>
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fs-6"> <i class="fa fa-list" aria-hidden="true"></i> List of Users</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- List of users table -->
+                                <div id="record">
+                                    <table id="datatable" class="table table-striped">
+                                        <thead>
+                                        <tr>
+                                            <th>Client ID</th>
+                                            <th>First Name</th>
+                                            <th>Last Name</th>
+                                            <th>Email</th>
+                                            <th>User Type</th>
+                                            <th>Status</th>
+                                            <th>Record Status</th>
+                                            <th>Actions</th> 
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>  
+                </main>
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright © Academic File Request System 2024</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                ·
+                                <a href="#">Terms & Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+        {% include 'admin/user/profile_modal.html' %}
+        
+        <!-- Dashboard Profile Modal -->
+        <div class="modal fade" id="dashboardProfileModal" tabindex="-1" aria-labelledby="dashboardProfileModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <!-- Profile Card (copied from dashboard.html) - without card header -->
+                        <div class="profile-card mb-4">
+                            <div class="profile-header d-flex justify-content-between align-items-center">
+                                <h4 class="m-0"><i class="fas fa-user-circle me-2"></i>User Profile</h4>
+                            </div>
+                            <div class="profile-content">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="info-section mb-3">
+                                            <h5 class="info-title"><i class="fas fa-id-card me-2"></i>Account Information</h5>
+                                            <div class="mb-3">
+                                                <span class="user-type-badge">
+                                                    <i class="fas fa-user-tag me-1"></i> <span id="userTypeDisplay">User Type</span>
+                                                </span>
+                                            </div>
+                                            <p class="mb-2"><strong>Student/ID Number:</strong> <span id="studentNumberDisplay">-</span></p>
+                                            <p class="mb-2"><strong>Email:</strong> <span id="emailDisplay">-</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-section mb-3">
+                                            <h5 class="info-title"><i class="fas fa-address-card me-2"></i>Personal Information</h5>
+                                            <p class="mb-2"><strong>Name:</strong> <span id="fullNameDisplay">-</span></p>
+                                            <p class="mb-2"><strong>Course Code:</strong> <span id="courseCodeDisplay">-</span></p>
+                                            <p class="mb-2"><strong>Contact:</strong> <span id="contactDisplay">-</span></p>
+                                            <p class="mb-2"><strong>Year:</strong> <span id="yearRangeDisplay">-</span></p>
+                                        </div>
+                                    </div>                                            
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="editProfileBtn" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            $(document).ready(function() {
+                // Initialize
+                getUserData();
+
+                function showToast(options) {
+                    Toastify({
+                        text: options.message,
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: options.color,
+                        stopOnFocus: true
+                    }).showToast();
+                }
+
+                function getUserData() {
+                    $.ajax({
+                        type: 'GET',
+                        url: '/record/list/',
+                        success: function(response) {
+                            let data = JSON.parse(response);
+                            createUserTable(data);
+                        },
+                        error: function(xhr, errmsg, err) {
+                            console.log(errmsg);
+                            showToast({
+                                'message': 'Error loading user data',
+                                'color': '#FF0000'
+                            });
+                        }
+                    });
+                }
+
+                function createUserTable(data) {
+                    // Destroy existing DataTable if it exists
+                    if ($.fn.DataTable.isDataTable('#datatable')) {
+                        $('#datatable').DataTable().destroy();
+                    }
+
+                    // Create a new DataTable
+                    var table = $('#datatable').DataTable({
+                        data: data,
+                        columns: [
+                            { data: 'student_number' },
+                            { data: 'first_name' },
+                            { data: 'last_name' },
+                            { data: 'email' },
+                            { data: 'user_type' },
+                            { 
+                                data: 'is_active',
+                                render: function(data) {
+                                    return data ? 
+                                        '<span class="badge bg-success">Active</span>' : 
+                                        '<span class="badge bg-warning">Inactive</span>';
+                                }
+                            },
+                            { 
+                                data: 'has_record',
+                                render: function(data) {
+                                    return data ? 
+                                        '<span class="badge bg-success">Record Exists</span>' : 
+                                        '<span class="badge bg-danger">No Record</span>';
+                                }
+                            },
+                            { 
+                                data: null,
+                                render: function(data) {
+                                    let buttonText = data.has_record ? 
+                                        'View Profile' : 
+                                        '<i class="fas fa-exclamation-triangle text-warning"></i> (New User) View Profile';
+                                    
+                                    return '<button type="button" class="btn btn-primary btn-sm view-profile" ' +
+                                           'data-id="' + data.id + '" ' +
+                                           'data-has-record="' + data.has_record + '">' +
+                                           buttonText + '</button>';
+                                }
+                            }
+                        ],
+                        responsive: true
+                    });
+                    
+                    // Add event listener for profile view buttons
+                    $('#datatable tbody').on('click', '.view-profile', function() {
+                        var userId = $(this).data('id');
+                        var hasRecord = $(this).data('has-record');
+                        
+                        if (hasRecord) {
+                            // Show dashboard-style profile for users with records
+                            openDashboardProfileModal(userId);
+                        } else {
+                            // Show regular edit form for users without records
+                            openProfileModal(userId);
+                        }
+                    });
+                }
+
+                // Function to open the regular profile modal (for editing or new users)
+                function openProfileModal(userId) {
+                    const modal = $('#profileModal');
+                    
+                    // Show loading spinner
+                    modal.find('.modal-content').html('<div class="modal-body text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+                    
+                    // Open the modal
+                    modal.modal('show');
+                    
+                    // Load profile data
+                    $.ajax({
+                        url: '/admin-panel/user-accounts/profile/' + userId + '/',
+                        type: 'GET',
+                        success: function(response) {
+                            modal.find('.modal-content').html(response);
+                        },
+                        error: function() {
+                            modal.find('.modal-content').html('<div class="modal-body"><div class="alert alert-danger">Error loading profile data</div></div>');
+                        }
+                    });
+                }
+
+                // Function to open the dashboard-style profile modal
+                function openDashboardProfileModal(userId) {
+                    const modal = $('#dashboardProfileModal');
+                    
+                    // Store the user ID for the edit button
+                    modal.data('userId', userId);
+                    
+                    // Set up edit button click handler
+                    $('#editProfileBtn').off('click').on('click', function() {
+                        modal.modal('hide');
+                        openProfileModal(userId);
+                    });
+                    
+                    // Show loading state
+                    $('#studentNumberDisplay, #emailDisplay, #userTypeDisplay, #fullNameDisplay, #courseCodeDisplay, #contactDisplay, #yearRangeDisplay').text('Loading...');
+                    
+                    // Open the modal
+                    modal.modal('show');
+                    
+                    // Load user data
+                    $.ajax({
+                        url: '/admin-panel/user-accounts/profile/' + userId + '/',
+                        type: 'GET',
+                        success: function(response) {
+                            // Extract user data from the form fields in the response
+                            const userData = extractUserData(response);
+                            
+                            // Update the dashboard profile with user data
+                            $('#statusBadge').removeClass('status-active status-pending')
+                                .addClass(userData.isActive ? 'status-active' : 'status-pending');
+                            $('#statusText').text(userData.isActive ? 'Account Active' : 'Pending Approval');
+                            $('#userTypeDisplay').text(userData.userType);
+                            $('#studentNumberDisplay').text(userData.studentNumber);
+                            $('#emailDisplay').text(userData.email);
+                            $('#fullNameDisplay').text(`${userData.firstName} ${userData.middleName} ${userData.lastName}`);
+                            $('#courseCodeDisplay').text(userData.courseCode);
+                            $('#contactDisplay').text(userData.contactNo);
+                            $('#yearRangeDisplay').text(`${userData.entryYearFrom} - ${userData.entryYearTo}`);
+                            
+                            // Update modal title with user name
+                            $('#dashboardProfileModalLabel').text(`${userData.firstName} ${userData.lastName}'s Profile`);
+                        },
+                        error: function() {
+                            showToast({
+                                message: 'Error loading user data',
+                                color: '#FF0000'
+                            });
+                        }
+                    });
+                }
+
+                // Function to extract user data from the response HTML
+                function extractUserData(html) {
+                    const $html = $(html);
+                    
+                    return {
+                        firstName: $html.find('[name="first_name"]').val() || 'N/A',
+                        lastName: $html.find('[name="last_name"]').val() || 'N/A',
+                        middleName: $html.find('[name="middle_name"]').val() || '',
+                        email: $html.find('[name="email"]').val() || 'N/A',
+                        studentNumber: $html.find('[name="student_number"]').val() || 'N/A',
+                        userType: $html.find('[name="user_type"] option:selected').text() || 'N/A',
+                        isActive: $html.find('[name="is_active"]').is(':checked'),
+                        courseCode: $html.find('[name="course_code"]').val() || 'N/A',
+                        contactNo: $html.find('[name="contact_no"]').val() || 'N/A',
+                        entryYearFrom: $html.find('[name="entry_year_from"]').val() || 'N/A',
+                        entryYearTo: $html.find('[name="entry_year_to"]').val() || 'N/A'
+                    };
+                }
+
+                // Get CSRF token for AJAX requests
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+            });
+        </script>
+    </body>
+</html>

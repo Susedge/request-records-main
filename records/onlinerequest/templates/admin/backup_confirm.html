@@ -1,0 +1,68 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>Database Backup - Academic File Request System</title>
+        {% include 'header.html' %}
+    </head>
+
+    <body class="sb-nav-fixed">
+        {% include 'admin/admin-topnav.html' %}
+        
+        <div id="layoutSidenav">
+
+            {% include 'admin/admin-sidenav.html' %}
+
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4">
+                        <div class="card my-3">
+                            <div class="card-header">
+                                <h4>Database Backup</h4>
+                            </div>
+                            <div class="card-body">
+                                <div id="content-main">
+                                    <div class="module">
+                                        <h2>Create Database Backup</h2>
+                                        <p>This will create a backup of the current database. The backup file will be stored in:</p>
+                                        <pre>{{ backup_dir }}</pre>
+                                        
+                                        <p>Are you sure you want to create a backup?</p>
+                                        
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <div class="submit-row">
+                                                <input type="submit" class="btn btn-primary" value="Yes, create backup">
+                                                <a href="{% url 'backup_list' %}" class="btn btn-secondary">No, cancel</a>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright © Academic File Request System 2024</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                ·
+                                <a href="#">Terms & Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        
+        {% include 'footer.html' %}
+    </body>
+</html>
