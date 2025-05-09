@@ -126,9 +126,14 @@ STATIC_URL = '/static/'
 # This is the directory where Django will collect all static files for deployment
 STATIC_ROOT = os.path.join(BASE_DIR, 'static_root')
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'records', 'static'),  # Project static files
+# Define potential static directories
+potential_static_dirs = [
+    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'records', 'static'),
 ]
+
+# Only include directories that actually exist
+STATICFILES_DIRS = [d for d in potential_static_dirs if os.path.isdir(d)]
 
 # MEDIA_URL = '/media/'
 # MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

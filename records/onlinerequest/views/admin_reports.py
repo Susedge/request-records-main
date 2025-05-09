@@ -73,8 +73,17 @@ def admin_generate_report_pdf(request, template_id):
         
         docx_path = os.path.join(generated_dir, f"{safe_name}.docx")
         
-        # Process document using docxtpl for better template handling
-        doc_template = DocxTemplate(template.template_file.path)
+        # Fix the template file path
+        template_path = template.template_file.path
+        
+        # Check if the path is missing "records/" and fix it
+        if '/reports/templates/' in template_path and not os.path.exists(template_path):
+            corrected_path = template_path.replace('/reports/templates/', '/records/reports/templates/')
+            if os.path.exists(corrected_path):
+                template_path = corrected_path
+        
+        # Use the corrected path
+        doc_template = DocxTemplate(template_path)
         doc_template.render(field_mapping)
         doc_template.save(docx_path)
         
