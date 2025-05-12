@@ -233,6 +233,10 @@ $(document).ready(function() {
     }
 });
 
+function submitRequest(requestID, data) {
+    submitUserRequest(requestID);
+}
+
 // Function to submit the user request directly
 function submitUserRequest(requestId) {
     // Validate purpose
