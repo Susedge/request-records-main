@@ -63,7 +63,7 @@
                                                 </h6>
                                                 {% if user_request.authorization_letter or user_request.has_authorization_letter %}
                                                 <h6 class="fw-bold">Authorization Letter:</h6>
-                                                {% if user_request.has_authorization_letter %}
+                                                {% if user_request.has_authorization_letter or user_request.authorization_letter %}
                                                     <a href="{% url 'download_authorization_letter' user_request.id %}" class="btn btn-sm btn-primary">
                                                         <i class="fas fa-download"></i> Download Authorization Letter
                                                     </a>
