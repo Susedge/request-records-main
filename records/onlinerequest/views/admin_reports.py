@@ -36,9 +36,9 @@ def convert_with_ilovepdf(docx_path, pdf_path):
     """
     Convert DOCX to PDF using the ILovePDF API
     """
-    # ILovePDF API credentials (store these in settings.py in production)
-    ILOVEPDF_PUBLIC_KEY = os.environ.get('ILOVEPDF_PUBLIC_KEY', 'project_public_5d1bc2a1cd1cbae5ef4b5edde24eda63_AKX6c9acd2f25c67bc7a14b3e47be2c9f0e91')
-    ILOVEPDF_SECRET_KEY = os.environ.get('ILOVEPDF_SECRET_KEY', 'secret_key_2ec1c4b9f77da73f3bafe0f7c56ed26a_BL6Qb3bbc3a16fe24ad19d7970b7eaa0ad693')
+    # Use the keys from settings.py
+    ILOVEPDF_PUBLIC_KEY = settings.ILOVEPDF_PUBLIC_KEY
+    ILOVEPDF_SECRET_KEY = settings.ILOVEPDF_SECRET_KEY
     
     try:
         # Step 1: Start task

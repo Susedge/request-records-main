@@ -23,6 +23,9 @@ ALLOWED_HOSTS = [
 EMAIL_HOST_USER = 'chesspiecedum2@gmail.com'
 EMAIL_HOST_PASSWORD = 'btoogzanhtonxulo'
 
+ILOVEPDF_PUBLIC_KEY = 'project_public_957a4a8269e685f12813c15549bdffef_EwBcY08656cb93ec06c17b0ea637477e27406'
+ILOVEPDF_SECRET_KEY = 'secret_key_89df9d58d5ba6a346f7169a1c25a1961_l2eBs7feeaf7221eec9d86484a4d18bfee7a1'
+
 # Application definition
 
 INSTALLED_APPS = [
