@@ -3,6 +3,8 @@ from django.http import FileResponse, Http404
 from django.conf import settings
 from docxtpl import DocxTemplate
 import os
+import subprocess
+import shutil
 from ..models import ReportTemplate, Purpose
 from datetime import datetime
 import io
@@ -14,7 +16,7 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-import subprocess
+
 
 def admin_reports(request):
     templates = ReportTemplate.objects.all()
@@ -38,8 +40,8 @@ def admin_generate_report_pdf(request, template_id):
     first_name = request.POST.get('first_name', '')
     last_name = request.POST.get('last_name', '')
     middle_name = request.POST.get('middle_name', '')
-    suffix = request.POST.get('suffix', '')  # Get the suffix value
-    output_format = request.POST.get('output_format', 'docx')  # Get selected format
+    suffix = request.POST.get('suffix', '')
+    output_format = request.POST.get('output_format', 'docx')
     
     # Construct full name with suffix if present
     full_name = f"{first_name} {middle_name} {last_name}"
@@ -50,7 +52,7 @@ def admin_generate_report_pdf(request, template_id):
         'first_name': first_name,
         'last_name': last_name,
         'middle_name': middle_name,
-        'suffix': suffix,  # Add suffix to the template variables
+        'suffix': suffix,
         'full_name': full_name,
         'contact_no': request.POST.get('contact_no', ''),
         'entry_year_from': request.POST.get('entry_year_from', ''),
@@ -69,7 +71,7 @@ def admin_generate_report_pdf(request, template_id):
         
         # Ensure proper filename with extension
         safe_name = slugify(template.name)
-        if not safe_name:  # In case slugify removes all characters
+        if not safe_name:
             safe_name = "report"
         
         docx_path = os.path.join(generated_dir, f"{safe_name}.docx")
@@ -92,25 +94,61 @@ def admin_generate_report_pdf(request, template_id):
         if output_format == 'pdf':
             pdf_path = os.path.join(generated_dir, f"{safe_name}.pdf")
             
-            # Use docx2pdf library for accurate conversion with images and formatting
-            from docx2pdf import convert
+            # Try different PDF conversion methods
+            conversion_successful = False
+            error_messages = []
             
-            # Convert the generated DOCX to PDF
+            # Method 1: Try docx2pdf if available
             try:
+                from docx2pdf import convert
                 convert(docx_path, pdf_path)
-            except Exception as docx2pdf_error:
-                # Fallback if docx2pdf fails (might happen on some server environments)
+                conversion_successful = True
+            except Exception as e:
+                error_messages.append(f"docx2pdf error: {str(e)}")
+            
+            # Method 2: Try LibreOffice if available and Method 1 failed
+            if not conversion_successful:
                 try:
-                    # Alternative using libreoffice if available on the server
-                    subprocess.run(['libreoffice', '--headless', '--convert-to', 'pdf', '--outdir', 
-                                   generated_dir, docx_path], check=True)
-                except Exception as lo_error:
-                    # If both conversion methods fail, try python-docx-template's built-in PDF generation
-                    # as a last resort (though this might not handle images well)
-                    from docxtpl import DocxTemplate
-                    doc_template = DocxTemplate(docx_path)
-                    doc_template.save(pdf_path)
+                    subprocess.run(['libreoffice', '--headless', '--convert-to', 'pdf', 
+                                   '--outdir', generated_dir, docx_path], check=True)
                     
+                    # LibreOffice creates PDF with the same base name
+                    libreoffice_pdf = os.path.join(generated_dir, os.path.splitext(os.path.basename(docx_path))[0] + '.pdf')
+                    if os.path.exists(libreoffice_pdf) and libreoffice_pdf != pdf_path:
+                        shutil.move(libreoffice_pdf, pdf_path)
+                        
+                    conversion_successful = True
+                except Exception as e:
+                    error_messages.append(f"LibreOffice error: {str(e)}")
+            
+            # Method 3: Last resort - crude text extraction (no images or proper formatting)
+            if not conversion_successful:
+                try:
+                    # Create a basic PDF with just text content
+                    doc_content = docx2python(docx_path)
+                    doc = SimpleDocTemplate(pdf_path, pagesize=letter)
+                    styles = getSampleStyleSheet()
+                    flowables = []
+                    
+                    for table in doc_content.body:
+                        for row in table:
+                            for cell in row:
+                                for paragraph in cell:
+                                    if paragraph:
+                                        p = Paragraph(paragraph, styles['Normal'])
+                                        flowables.append(p)
+                                        flowables.append(Spacer(1, 0.2 * inch))
+                    
+                    # Build the PDF document
+                    doc.build(flowables)
+                    conversion_successful = True
+                except Exception as e:
+                    error_messages.append(f"Fallback PDF creation error: {str(e)}")
+            
+            # If all conversion methods failed, raise an error
+            if not conversion_successful:
+                raise Exception(f"All PDF conversion methods failed: {'; '.join(error_messages)}")
+            
             # Serve the PDF
             output_filename = f"{safe_name}.pdf"
             response = FileResponse(
@@ -121,12 +159,12 @@ def admin_generate_report_pdf(request, template_id):
             # Set Content-Disposition header
             response['Content-Disposition'] = f'attachment; filename="{output_filename}"'
             
-            # Clean up both files after streaming
+            # Clean up files after streaming
             response._resource_closers.append(lambda: os.remove(docx_path))
             response._resource_closers.append(lambda: os.remove(pdf_path))
             
         else:
-            # Serve the DOCX with explicit content disposition header
+            # Serve the DOCX file
             output_filename = f"{safe_name}.docx"
             response = FileResponse(
                 open(docx_path, 'rb'),
