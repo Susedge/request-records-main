@@ -39,8 +39,8 @@ def convert_with_pylovepdf(docx_path, pdf_path):
     try:
         from pylovepdf.tools.officepdf import OfficeToPdf
         
-        # Initialize the task
-        task = OfficeToPdf(settings.ILOVEPDF_PUBLIC_KEY, verify_ssl=True)
+        # Initialize the task - Add the required proxies parameter
+        task = OfficeToPdf(settings.ILOVEPDF_PUBLIC_KEY, verify_ssl=True, proxies=None)
         
         # Add file to the task
         task.add_file(docx_path)
