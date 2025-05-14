@@ -135,70 +135,14 @@ def admin_generate_report_pdf(request, template_id):
         if output_format == 'pdf':
             pdf_path = os.path.join(generated_dir, f"{safe_name}.pdf")
             
-            # Try different PDF conversion methods
-            conversion_successful = False
-            error_messages = []
+            # Only use PyLovePDF for conversion
+            print(f"Starting PDF conversion with PyLovePDF...")
+            if not convert_with_pylovepdf(docx_path, pdf_path):
+                raise Exception("PyLovePDF conversion failed. Check logs for details.")
             
-            # Method 1: Try PyLovePDF (official ILovePDF library)
-            try:
-                if convert_with_pylovepdf(docx_path, pdf_path):
-                    conversion_successful = True
-                else:
-                    error_messages.append("PyLovePDF conversion failed")
-            except Exception as e:
-                error_messages.append(f"PyLovePDF error: {str(e)}")
-            
-            # Method 2: Try docx2pdf if PyLovePDF failed
-            if not conversion_successful:
-                try:
-                    from docx2pdf import convert
-                    convert(docx_path, pdf_path)
-                    conversion_successful = True
-                except Exception as e:
-                    error_messages.append(f"docx2pdf error: {str(e)}")
-            
-            # Method 3: Try LibreOffice if available and previous methods failed
-            if not conversion_successful:
-                try:
-                    subprocess.run(['libreoffice', '--headless', '--convert-to', 'pdf', 
-                                   '--outdir', generated_dir, docx_path], check=True)
-                    
-                    # LibreOffice creates PDF with the same base name
-                    libreoffice_pdf = os.path.join(generated_dir, os.path.splitext(os.path.basename(docx_path))[0] + '.pdf')
-                    if os.path.exists(libreoffice_pdf) and libreoffice_pdf != pdf_path:
-                        shutil.move(libreoffice_pdf, pdf_path)
-                        
-                    conversion_successful = True
-                except Exception as e:
-                    error_messages.append(f"LibreOffice error: {str(e)}")
-            
-            # Method A: Last resort - crude text extraction (no images or proper formatting)
-            if not conversion_successful:
-                try:
-                    # Create a basic PDF with just text content
-                    doc_content = docx2python(docx_path)
-                    doc = SimpleDocTemplate(pdf_path, pagesize=letter)
-                    styles = getSampleStyleSheet()
-                    flowables = []
-                    
-                    for table in doc_content.body:
-                        for row in table:
-                            for cell in row:
-                                for paragraph in cell:
-                                    if paragraph:
-                                        p = Paragraph(paragraph, styles['Normal'])
-                                        flowables.append(p)
-                                        flowables.append(Spacer(1, 0.2 * inch))
-                    
-                    # Build the PDF document
-                    doc.build(flowables)
-                    conversion_successful = True
-                except Exception as e:
-                    error_messages.append(f"Fallback PDF creation error: {str(e)}")
-            
-            # If all conversion methods failed, raise an error
-            if not conversion_successful:
-                raise Exception(f"All PDF conversion methods failed: {'; '.join(error_messages)}")
+            print(f"PDF conversion completed successfully.")
+            print(f"Output PDF path: {pdf_path}")
+            print(f"PDF exists: {os.path.exists(pdf_path)}")
             
             # Serve the PDF
             output_filename = f"{safe_name}.pdf"
