@@ -82,7 +82,7 @@ def send_email_with_code(email, verification_code, expiry_time, message_type='ot
         message = f"""
         <html>
         <body>
-            <p>This code will expire in <strong style="font-size: 1.2em; color: #c00;">{expiry_display}</strong> or when you leave the registration page.</p>
+            <p>Use this code to verify your Account, It will expire in <strong style="font-size: 1.2em; color: #c00;">{expiry_display}</strong> or when you leave the registration page.</p>
             <p style="font-size: 1.1em; color: #333;">Your verification code is:</p>
             <h1 style="text-align: center; font-size: 3em; color: #007bff; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);"> {verification_code} </h1>
         </body>

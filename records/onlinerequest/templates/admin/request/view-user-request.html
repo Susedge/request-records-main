@@ -332,7 +332,7 @@
                 formData.append('new_status', newStatus);
                 
                 // Check if we need to mark as completed and have a file
-                if (newStatus === "Completed") {
+/*                if (newStatus === "Completed") {
                     const requestedFile = document.getElementById("requestedFile").files[0];
                     if (!requestedFile && !document.querySelector("a[href].btn-success")) {
                         showToast({
@@ -342,7 +342,8 @@
                         return;
                     }
                 }
-                
+*/
+               
                 // Add pickup schedule if provided
                 if (document.getElementById("pickupSchedule").value) {
                     formData.append('pickupSchedule', document.getElementById("pickupSchedule").value);
