@@ -14,6 +14,7 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
+import subprocess
 
 def admin_reports(request):
     templates = ReportTemplate.objects.all()
@@ -91,27 +92,25 @@ def admin_generate_report_pdf(request, template_id):
         if output_format == 'pdf':
             pdf_path = os.path.join(generated_dir, f"{safe_name}.pdf")
             
-            # Extract text content from DOCX
-            doc_content = docx2python(docx_path)
+            # Use docx2pdf library for accurate conversion with images and formatting
+            from docx2pdf import convert
             
-            # Create PDF
-            doc = SimpleDocTemplate(pdf_path, pagesize=letter)
-            styles = getSampleStyleSheet()
-            flowables = []
-            
-            # Process content and add to PDF
-            for table in doc_content.body:
-                for row in table:
-                    for cell in row:
-                        for paragraph in cell:
-                            if paragraph:
-                                p = Paragraph(paragraph, styles['Normal'])
-                                flowables.append(p)
-                                flowables.append(Spacer(1, 0.2 * inch))
-            
-            # Build the PDF document
-            doc.build(flowables)
-            
+            # Convert the generated DOCX to PDF
+            try:
+                convert(docx_path, pdf_path)
+            except Exception as docx2pdf_error:
+                # Fallback if docx2pdf fails (might happen on some server environments)
+                try:
+                    # Alternative using libreoffice if available on the server
+                    subprocess.run(['libreoffice', '--headless', '--convert-to', 'pdf', '--outdir', 
+                                   generated_dir, docx_path], check=True)
+                except Exception as lo_error:
+                    # If both conversion methods fail, try python-docx-template's built-in PDF generation
+                    # as a last resort (though this might not handle images well)
+                    from docxtpl import DocxTemplate
+                    doc_template = DocxTemplate(docx_path)
+                    doc_template.save(pdf_path)
+                    
             # Serve the PDF
             output_filename = f"{safe_name}.pdf"
             response = FileResponse(
