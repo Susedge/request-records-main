@@ -232,97 +232,111 @@
                 toast.showToast();
             }
 
-            function approveRequest(id) {
-                var csrftoken = getCookie('csrftoken');
-                let formData = new FormData();
-                
-                formData.append('action', 'approve');
-                formData.append('new_status', 'Processing');
-                formData.append('approved', 'true');
-                formData.append('processing_time', document.getElementById("processingTime").value);
-                
-                const remarks = document.getElementById("remarks").value;
-                if (remarks) {
-                    formData.append('remarks', remarks);
-                }
-                
-                $.ajax({
-                    type: 'POST',
-                    url: '/admin-panel/user-request/' + id,
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    headers: {
-                        'X-CSRFToken': csrftoken
-                    },
-                    success: function(response) {
-                        showToast({
-                            'message': 'Request approved successfully! The user will be notified to upload required documents.',
-                            'color': '#008000'
-                        });
 
-                        // Refresh the page after short delay
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 2000);
-                    },
-                    error: function(xhr, errmsg, err) {
-                        console.log(errmsg);
-                        showToast({
-                            'message': 'An error occurred. Please try again.',
-                            'color': '#FF0000'
-                        });
-                    }
-                });
-            }
-            
-            function declineRequest(id) {
-                var csrftoken = getCookie('csrftoken');
-                let formData = new FormData();
-                
-                formData.append('action', 'decline');
-                formData.append('new_status', 'Declined');
-                
-                const remarks = document.getElementById("remarks").value;
-                if (remarks) {
-                    formData.append('remarks', remarks);
-                } else {
-                    showToast({
-                        'message': 'Please provide remarks explaining why the request was declined.',
-                        'color': '#FF0000'
-                    });
-                    return;
-                }
-                
-                $.ajax({
-                    type: 'POST',
-                    url: '/admin-panel/user-request/' + id,
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    headers: {
-                        'X-CSRFToken': csrftoken
-                    },
-                    success: function(response) {
-                        showToast({
-                            'message': 'Request declined. The user will be notified.',
-                            'color': '#008000'
-                        });
+//add alert            
+function approveRequest(id) {
+    if (!confirm("Are you sure you want to approve this request?")) {
+        return; // Exit if the user clicks "Cancel"
+    }
 
-                        // Redirect back to user requests list
-                        setTimeout(() => {
-                            window.location.href = '/admin-panel/user-request/';
-                        }, 2000);
-                    },
-                    error: function(xhr, errmsg, err) {
-                        console.log(errmsg);
-                        showToast({
-                            'message': 'An error occurred. Please try again.',
-                            'color': '#FF0000'
-                        });
-                    }
-                });
-            }
+    var csrftoken = getCookie('csrftoken');
+    let formData = new FormData();
+    
+    formData.append('action', 'approve');
+    formData.append('new_status', 'Processing');
+    formData.append('approved', 'true');
+    formData.append('processing_time', document.getElementById("processingTime").value);
+    
+    const remarks = document.getElementById("remarks").value;
+    if (remarks) {
+        formData.append('remarks', remarks);
+    }
+    
+    $.ajax({
+        type: 'POST',
+        url: '/admin-panel/user-request/' + id,
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+        success: function(response) {
+            showToast({
+                'message': 'Request approved successfully! The user will be notified to upload required documents.',
+                'color': '#008000'
+            });
+
+            // Refresh the page after short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        },
+        error: function(xhr, errmsg, err) {
+            console.log(errmsg);
+            showToast({
+                'message': 'An error occurred. Please try again.',
+                'color': '#FF0000'
+            });
+        }
+    });
+}
+
+
+
+//additional alert for decline 
+function declineRequest(id) {
+    if (!confirm("Are you sure you want to decline this request?")) {
+        return; // Exit if the user clicks "Cancel"
+    }
+
+    var csrftoken = getCookie('csrftoken');
+    let formData = new FormData();
+    
+    formData.append('action', 'decline');
+    formData.append('new_status', 'Declined');
+    
+    const remarks = document.getElementById("remarks").value;
+    if (remarks) {
+        formData.append('remarks', remarks);
+    } else {
+        showToast({
+            'message': 'Please provide remarks explaining why the request was declined.',
+            'color': '#FF0000'
+        });
+        return;
+    }
+    
+    $.ajax({
+        type: 'POST',
+        url: '/admin-panel/user-request/' + id,
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+        success: function(response) {
+            showToast({
+                'message': 'Request declined. The user will be notified.',
+                'color': '#008000'
+            });
+
+            // Redirect back to user requests list
+            setTimeout(() => {
+                window.location.href = '/admin-panel/user-request/';
+            }, 2000);
+        },
+        error: function(xhr, errmsg, err) {
+            console.log(errmsg);
+            showToast({
+                'message': 'An error occurred. Please try again.',
+                'color': '#FF0000'
+            });
+        }
+    });
+}
+
 
             function updateRequest(id) {
                 var csrftoken = getCookie('csrftoken');
