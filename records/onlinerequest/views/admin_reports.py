@@ -39,7 +39,7 @@ def convert_with_pylovepdf(docx_path, pdf_path):
     try:
         from pylovepdf.tools.officepdf import OfficeToPdf
         
-        # Initialize the task - Add the required proxies parameter
+        # Initialize the task with required proxies parameter
         task = OfficeToPdf(settings.ILOVEPDF_PUBLIC_KEY, verify_ssl=True, proxies=None)
         
         # Add file to the task
@@ -55,18 +55,50 @@ def convert_with_pylovepdf(docx_path, pdf_path):
         # Download processed files
         task.download()
         
-        # Find the downloaded file (it will be named differently)
+        # Print debug info about available files
+        print(f"Files in output directory after download: {os.listdir(output_dir)}")
+        
+        # The PyLovePDF library typically appends '_officepdf_<date>' to the filename
+        # Find the converted file
+        converted_found = False
+        base_name = os.path.splitext(os.path.basename(docx_path))[0]
         for file in os.listdir(output_dir):
-            if file.endswith(".pdf") and file.startswith(os.path.splitext(os.path.basename(docx_path))[0]):
+            print(f"Checking file: {file}")
+            if file.endswith(".pdf") and file.startswith(base_name):
                 downloaded_pdf = os.path.join(output_dir, file)
-                if downloaded_pdf != pdf_path and os.path.exists(downloaded_pdf):
-                    shutil.move(downloaded_pdf, pdf_path)
+                print(f"Found converted file: {downloaded_pdf}")
+                
+                # Move or copy the file to the expected path
+                try:
+                    shutil.copy2(downloaded_pdf, pdf_path)
+                    print(f"Successfully copied to: {pdf_path}")
+                    converted_found = True
                     break
+                except Exception as e:
+                    print(f"Error copying file: {str(e)}")
+                    # Try to move the file instead
+                    try:
+                        shutil.move(downloaded_pdf, pdf_path)
+                        print(f"Successfully moved to: {pdf_path}")
+                        converted_found = True
+                        break
+                    except Exception as move_error:
+                        print(f"Error moving file: {str(move_error)}")
         
         # Delete the task from the server
         task.delete_current_task()
         
-        return os.path.exists(pdf_path)
+        # Verify the file exists at the expected location
+        if os.path.exists(pdf_path):
+            print(f"PDF exists at target path: {pdf_path}")
+            return True
+        elif converted_found:
+            print(f"File was found but may not exist at final path: {pdf_path}")
+            return True
+        else:
+            print(f"Could not find converted PDF file")
+            return False
+            
     except Exception as e:
         print(f"PyLovePDF conversion error: {str(e)}")
         return False
@@ -143,6 +175,19 @@ def admin_generate_report_pdf(request, template_id):
             print(f"PDF conversion completed successfully.")
             print(f"Output PDF path: {pdf_path}")
             print(f"PDF exists: {os.path.exists(pdf_path)}")
+            
+            # After conversion
+            if not os.path.exists(pdf_path):
+                print(f"Critical: PDF not found at {pdf_path} after conversion")
+                print(f"Generated dir contents: {os.listdir(generated_dir)}")
+            else:
+                try:
+                    # Check file is readable
+                    with open(pdf_path, 'rb') as f:
+                        first_bytes = f.read(100)
+                        print(f"PDF file can be opened and read ({len(first_bytes)} bytes read)")
+                except Exception as open_error:
+                    print(f"Error opening PDF file: {str(open_error)}")
             
             # Serve the PDF
             output_filename = f"{safe_name}.pdf"
