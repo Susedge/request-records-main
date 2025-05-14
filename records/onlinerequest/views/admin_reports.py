@@ -5,6 +5,8 @@ from docxtpl import DocxTemplate
 import os
 import subprocess
 import shutil
+import requests
+import json
 from ..models import ReportTemplate, Purpose
 from datetime import datetime
 import io
@@ -29,6 +31,81 @@ def admin_report_form(request, template_id):
         'template': template,
         'purposes': purposes
     })
+
+def convert_with_ilovepdf(docx_path, pdf_path):
+    """
+    Convert DOCX to PDF using the ILovePDF API
+    """
+    # ILovePDF API credentials (store these in settings.py in production)
+    ILOVEPDF_PUBLIC_KEY = os.environ.get('ILOVEPDF_PUBLIC_KEY', 'project_public_5d1bc2a1cd1cbae5ef4b5edde24eda63_AKX6c9acd2f25c67bc7a14b3e47be2c9f0e91')
+    ILOVEPDF_SECRET_KEY = os.environ.get('ILOVEPDF_SECRET_KEY', 'secret_key_2ec1c4b9f77da73f3bafe0f7c56ed26a_BL6Qb3bbc3a16fe24ad19d7970b7eaa0ad693')
+    
+    try:
+        # Step 1: Start task
+        start_resp = requests.get(
+            'https://api.ilovepdf.com/v1/start/officepdf',
+            headers={'Authorization': f'Bearer {ILOVEPDF_PUBLIC_KEY}'}
+        )
+        if start_resp.status_code != 200:
+            raise Exception(f"Failed to start task: {start_resp.text}")
+        
+        task_data = start_resp.json()
+        server = task_data.get('server')
+        task_id = task_data.get('task')
+        
+        # Step 2: Upload the DOCX file
+        with open(docx_path, 'rb') as f:
+            files = {'file': (os.path.basename(docx_path), f)}
+            upload_resp = requests.post(
+                f'https://{server}/v1/upload',
+                headers={'Authorization': f'Bearer {ILOVEPDF_PUBLIC_KEY}'},
+                data={'task': task_id},
+                files=files
+            )
+            
+        if upload_resp.status_code != 200:
+            raise Exception(f"Failed to upload file: {upload_resp.text}")
+        
+        upload_data = upload_resp.json()
+        server_filename = upload_data.get('server_filename')
+        
+        # Step 3: Process the conversion
+        process_data = {
+            'task': task_id,
+            'tool': 'officepdf',
+            'files': [{'server_filename': server_filename, 'filename': os.path.basename(docx_path)}]
+        }
+        
+        process_resp = requests.post(
+            f'https://{server}/v1/process',
+            headers={
+                'Authorization': f'Bearer {ILOVEPDF_PUBLIC_KEY}',
+                'Content-Type': 'application/json'
+            },
+            data=json.dumps(process_data)
+        )
+        
+        if process_resp.status_code != 200:
+            raise Exception(f"Failed to process conversion: {process_resp.text}")
+        
+        # Step 4: Download the converted PDF
+        download_resp = requests.get(
+            f'https://{server}/v1/download/{task_id}',
+            headers={'Authorization': f'Bearer {ILOVEPDF_PUBLIC_KEY}'},
+            stream=True
+        )
+        
+        if download_resp.status_code != 200:
+            raise Exception(f"Failed to download PDF: {download_resp.text}")
+        
+        with open(pdf_path, 'wb') as f:
+            for chunk in download_resp.iter_content(chunk_size=8192):
+                f.write(chunk)
+        
+        return True
+    except Exception as e:
+        print(f"ILovePDF conversion error: {str(e)}")
+        return False
 
 def admin_generate_report_pdf(request, template_id):
     if request.method != 'POST':
@@ -98,15 +175,25 @@ def admin_generate_report_pdf(request, template_id):
             conversion_successful = False
             error_messages = []
             
-            # Method 1: Try docx2pdf if available
+            # Method 1: Try ILovePDF API (best quality with formatting and images)
             try:
-                from docx2pdf import convert
-                convert(docx_path, pdf_path)
-                conversion_successful = True
+                if convert_with_ilovepdf(docx_path, pdf_path):
+                    conversion_successful = True
+                else:
+                    error_messages.append("ILovePDF API conversion failed")
             except Exception as e:
-                error_messages.append(f"docx2pdf error: {str(e)}")
+                error_messages.append(f"ILovePDF error: {str(e)}")
             
-            # Method 2: Try LibreOffice if available and Method 1 failed
+            # Method 2: Try docx2pdf if ILovePDF failed
+            if not conversion_successful:
+                try:
+                    from docx2pdf import convert
+                    convert(docx_path, pdf_path)
+                    conversion_successful = True
+                except Exception as e:
+                    error_messages.append(f"docx2pdf error: {str(e)}")
+            
+            # Method 3: Try LibreOffice if available and previous methods failed
             if not conversion_successful:
                 try:
                     subprocess.run(['libreoffice', '--headless', '--convert-to', 'pdf', 
@@ -121,7 +208,7 @@ def admin_generate_report_pdf(request, template_id):
                 except Exception as e:
                     error_messages.append(f"LibreOffice error: {str(e)}")
             
-            # Method 3: Last resort - crude text extraction (no images or proper formatting)
+            # Method 4: Last resort - crude text extraction (no images or proper formatting)
             if not conversion_successful:
                 try:
                     # Create a basic PDF with just text content
