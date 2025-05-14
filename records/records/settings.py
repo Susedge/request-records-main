@@ -79,10 +79,12 @@ WSGI_APPLICATION = 'records.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+PERSISTENT_STORAGE_DIR = os.environ.get('RENDER_PERSISTENT_DIR', None)
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': Path(PERSISTENT_STORAGE_DIR) / 'db.sqlite3' if PERSISTENT_STORAGE_DIR else BASE_DIR / 'db.sqlite3',
     }
 }
 
