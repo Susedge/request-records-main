@@ -79,14 +79,27 @@ WSGI_APPLICATION = 'records.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-PERSISTENT_STORAGE_DIR = os.environ.get('RENDER_PERSISTENT_DIR', None)
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': Path(PERSISTENT_STORAGE_DIR) / 'db.sqlite3' if PERSISTENT_STORAGE_DIR else BASE_DIR / 'db.sqlite3',
+# Check if running on Render (production environment)
+if 'RENDER' in os.environ:
+    # PostgreSQL database configuration for Render
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'request_qdur',
+            'USER': 'superuser',
+            'PASSWORD': 'RO8eZ7ed8yxcfa2GUUZZKX4iJhVPay1J',
+            'HOST': 'dpg-d0i4gj24d50c73b3dfa0-a',
+            'PORT': '5432',
+        }
     }
-}
+else:
+    # SQLite for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation

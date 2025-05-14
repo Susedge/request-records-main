@@ -31,7 +31,7 @@ google-auth==2.29.0
 google-auth-httplib2==0.2.0
 google-auth-oauthlib==1.2.0
 googleapis-common-protos==1.63.0
-gunicorn
+gunicorn==23.0.0
 httplib2==0.22.0
 idna==3.7
 Jinja2==3.1.6
@@ -39,11 +39,13 @@ lxml==5.3.0
 mammoth==1.9.0
 MarkupSafe==3.0.2
 oauthlib==3.2.2
+packaging==25.0
 paragraphs==1.0.1
 pdfrw==0.4
 pillow==11.0.0
 proto-plus==1.23.0
 protobuf==4.25.3
+psycopg2-binary==2.9.10
 pyasn1==0.6.0
 pyasn1_modules==0.4.0
 pycparser==2.22
@@ -77,4 +79,3 @@ urllib3==2.2.1
 weasyprint==64.1
 webencodings==0.5.1
 zopfli==0.2.3.post1
-whitenoise==6.6.0
