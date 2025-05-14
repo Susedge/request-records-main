@@ -80,3 +80,4 @@ weasyprint==64.1
 webencodings==0.5.1
 zopfli==0.2.3.post1
 whitenoise==6.6.0
+pylovepdf==2.1.0

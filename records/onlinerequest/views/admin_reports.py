@@ -32,79 +32,43 @@ def admin_report_form(request, template_id):
         'purposes': purposes
     })
 
-def convert_with_ilovepdf(docx_path, pdf_path):
+def convert_with_pylovepdf(docx_path, pdf_path):
     """
-    Convert DOCX to PDF using the ILovePDF API
+    Convert DOCX to PDF using the pylovepdf library
     """
-    # Use the keys from settings.py
-    ILOVEPDF_PUBLIC_KEY = settings.ILOVEPDF_PUBLIC_KEY
-    ILOVEPDF_SECRET_KEY = settings.ILOVEPDF_SECRET_KEY
-    
     try:
-        # Step 1: Start task
-        start_resp = requests.get(
-            'https://api.ilovepdf.com/v1/start/officepdf',
-            headers={'Authorization': f'Bearer {ILOVEPDF_PUBLIC_KEY}'}
-        )
-        if start_resp.status_code != 200:
-            raise Exception(f"Failed to start task: {start_resp.text}")
+        from pylovepdf.tools.officepdf import OfficeToPdf
         
-        task_data = start_resp.json()
-        server = task_data.get('server')
-        task_id = task_data.get('task')
+        # Initialize the task
+        task = OfficeToPdf(settings.ILOVEPDF_PUBLIC_KEY, verify_ssl=True)
         
-        # Step 2: Upload the DOCX file
-        with open(docx_path, 'rb') as f:
-            files = {'file': (os.path.basename(docx_path), f)}
-            upload_resp = requests.post(
-                f'https://{server}/v1/upload',
-                headers={'Authorization': f'Bearer {ILOVEPDF_PUBLIC_KEY}'},
-                data={'task': task_id},
-                files=files
-            )
-            
-        if upload_resp.status_code != 200:
-            raise Exception(f"Failed to upload file: {upload_resp.text}")
+        # Add file to the task
+        task.add_file(docx_path)
         
-        upload_data = upload_resp.json()
-        server_filename = upload_data.get('server_filename')
+        # Set output folder (same as input folder by default)
+        output_dir = os.path.dirname(pdf_path)
+        task.set_output_folder(output_dir)
         
-        # Step 3: Process the conversion
-        process_data = {
-            'task': task_id,
-            'tool': 'officepdf',
-            'files': [{'server_filename': server_filename, 'filename': os.path.basename(docx_path)}]
-        }
+        # Process the task
+        task.execute()
         
-        process_resp = requests.post(
-            f'https://{server}/v1/process',
-            headers={
-                'Authorization': f'Bearer {ILOVEPDF_PUBLIC_KEY}',
-                'Content-Type': 'application/json'
-            },
-            data=json.dumps(process_data)
-        )
+        # Download processed files
+        task.download()
         
-        if process_resp.status_code != 200:
-            raise Exception(f"Failed to process conversion: {process_resp.text}")
+        # Find the downloaded file (it will be named differently)
+        for file in os.listdir(output_dir):
+            if file.endswith(".pdf") and file.startswith(os.path.splitext(os.path.basename(docx_path))[0]):
+                downloaded_pdf = os.path.join(output_dir, file)
+                if downloaded_pdf != pdf_path and os.path.exists(downloaded_pdf):
+                    shutil.move(downloaded_pdf, pdf_path)
+                    break
         
-        # Step 4: Download the converted PDF
-        download_resp = requests.get(
-            f'https://{server}/v1/download/{task_id}',
-            headers={'Authorization': f'Bearer {ILOVEPDF_PUBLIC_KEY}'},
-            stream=True
-        )
+        # Delete the task from the server
+        task.delete_current_task()
         
-        if download_resp.status_code != 200:
-            raise Exception(f"Failed to download PDF: {download_resp.text}")
-        
-        with open(pdf_path, 'wb') as f:
-            for chunk in download_resp.iter_content(chunk_size=8192):
-                f.write(chunk)
-        
-        return True
+        return os.path.exists(pdf_path)
     except Exception as e:
-        print(f"ILovePDF conversion error: {str(e)}")
+        print(f"PyLovePDF conversion error: {str(e)}")
         return False
 
 def admin_generate_report_pdf(request, template_id):
@@ -175,16 +139,16 @@ def admin_generate_report_pdf(request, template_id):
             conversion_successful = False
             error_messages = []
             
-            # Method 1: Try ILovePDF API (best quality with formatting and images)
+            # Method 1: Try PyLovePDF (official ILovePDF library)
             try:
-                if convert_with_ilovepdf(docx_path, pdf_path):
+                if convert_with_pylovepdf(docx_path, pdf_path):
                     conversion_successful = True
                 else:
-                    error_messages.append("ILovePDF API conversion failed")
+                    error_messages.append("PyLovePDF conversion failed")
             except Exception as e:
-                error_messages.append(f"ILovePDF error: {str(e)}")
+                error_messages.append(f"PyLovePDF error: {str(e)}")
             
-            # Method 2: Try docx2pdf if ILovePDF failed
+            # Method 2: Try docx2pdf if PyLovePDF failed
             if not conversion_successful:
                 try:
                     from docx2pdf import convert
@@ -208,7 +172,7 @@ def admin_generate_report_pdf(request, template_id):
                 except Exception as e:
                     error_messages.append(f"LibreOffice error: {str(e)}")
             
-            # Method 4: Last resort - crude text extraction (no images or proper formatting)
+            # Method A: Last resort - crude text extraction (no images or proper formatting)
             if not conversion_successful:
                 try:
                     # Create a basic PDF with just text content
