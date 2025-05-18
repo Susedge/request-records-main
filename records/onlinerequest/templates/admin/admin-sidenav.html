@@ -1,7 +1,64 @@
 <style>
-    table.dataTable thead th{
-                padding: 10px;
-            }
+    table.dataTable thead th {
+        padding: 10px;
+    }
+    
+    /* Dark Complementary Theme for Admin Sidebar */
+    .sb-sidenav-dark {
+        background-color: rgba(20, 40, 20, 1);
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-menu .sb-sidenav-menu-heading {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link:hover {
+        color: #fff;
+        background-color: rgba(3, 133, 35, 0.5);
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link.active {
+        background-color: rgba(3, 133, 35, 0.7);
+        color: white;
+        font-weight: 500;
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link .sb-nav-link-icon {
+        color: rgba(3, 133, 35, 0.8);
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link:hover .sb-nav-link-icon {
+        color: rgba(3, 133, 35, 1);
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-footer {
+        background-color: rgba(15, 30, 15, 1);
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    /* Submenu Styling */
+    .sb-sidenav-dark .sb-sidenav-menu .sb-sidenav-menu-nested .nav-link {
+        padding-left: 2.5rem;
+        background-color: rgba(15, 30, 15, 0.7);
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-menu .sb-sidenav-menu-nested .nav-link:hover {
+        background-color: rgba(3, 133, 35, 0.5);
+    }
+    
+    /* Collapse indicator */
+    .sb-sidenav-dark .sb-sidenav-collapse-arrow {
+        color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .sb-sidenav-dark .nav-link:hover .sb-sidenav-collapse-arrow {
+        color: white;
+    }
 </style>
 
 <div id="layoutSidenav_nav">
@@ -54,17 +111,11 @@
                     <div class="sb-nav-link-icon"><i class="fas fa-qrcode"></i></div>
                     GCash QR
                 </a>
-                <!-- Database Backup Section - Moved to bottom
-                <div class="sb-sidenav-menu-heading">System Utilities</div>
-                <a class="nav-link" href="{% url 'backup_list' %}">
-                    <div class="sb-nav-link-icon"><i class="fas fa-database"></i></div>
-                    Database Backups
-                </a> -->
             </div>
         </div>
-   <!--     <div class="sb-sidenav-footer">
+        <div class="sb-sidenav-footer">
             <div class="small">Logged in as:</div>
             {{ user.email }}
-        </div> -->       
+        </div>        
     </nav>
 </div>

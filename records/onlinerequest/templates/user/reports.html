@@ -10,6 +10,69 @@
         <meta name="author" content="" />
         <title>Reports</title>
         {% include 'header.html' %}
+        <style>
+            .card {
+                border: none;
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+                margin-bottom: 20px;
+            }
+            
+            .card-header {
+                background-color: rgba(3, 133, 35, 0.8);
+                color: white;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+                padding: 15px 20px;
+            }
+            
+            .template-card {
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+                height: 100%;
+                border: 1px solid rgba(0, 0, 0, 0.08);
+            }
+            
+            .template-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(3, 133, 35, 0.15);
+            }
+            
+            .template-card .card-body {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            
+            .template-card .card-title {
+                color: rgba(3, 133, 35, 1);
+                font-weight: 600;
+                font-size: 1.25rem;
+            }
+            
+            .template-card .card-text {
+                color: #555;
+                flex-grow: 1;
+            }
+            
+            .template-card .btn-primary {
+                background-color: rgba(3, 133, 35, 1);
+                border-color: rgba(3, 133, 35, 1);
+                margin-top: auto;
+            }
+            
+            .template-card .btn-primary:hover {
+                background-color: rgba(2, 113, 30, 1);
+                border-color: rgba(2, 113, 30, 1);
+            }
+            
+            .intro-box {
+                background-color: rgba(3, 133, 35, 0.1);
+                border-left: 4px solid rgba(3, 133, 35, 1);
+                padding: 15px;
+                border-radius: 4px;
+                margin-bottom: 25px;
+            }
+        </style>
     </head>
 
     <body class="sb-nav-fixed">
@@ -23,45 +86,36 @@
                 <main>
                     <div class="container-fluid px-4">
                         <h1 class="mt-4">Reports</h1>
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <i class="fas fa-file-pdf me-1"></i>
-                                Available Report Templates
+                        <ol class="breadcrumb mb-4">
+                            <li class="breadcrumb-item"><a href="/user/dashboard/" style="color: rgba(3, 133, 35, 1);">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Reports</li>
+                        </ol>
+                        
+                        <div class="intro-box">
+                            <h5><i class="fas fa-info-circle me-2"></i>Generate Your Documents</h5>
+                            <p class="mb-0">Select from the available templates below. Your information will be automatically filled in, but you can review and edit before generating the final document.</p>
+                        </div>
+                        
+                        <div class="row row-cols-1 row-cols-md-3 g-4">
+                            {% for template in templates %}
+                            <div class="col">
+                                <div class="card template-card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ template.name }}</h5>
+                                        <p class="card-text">{{ template.description }}</p>
+                                        <a href="{% url 'report_form' template.id %}" class="btn btn-primary">
+                                            <i class="fas fa-file-alt me-2"></i>Generate Document
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Report Name</th>
-                                            <th>Description</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for template in templates %}
-                                        <tr>
-                                            <td>{{ template.name }}</td>
-                                            <td>{{ template.description }}</td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <select class="form-select form-select-sm me-2" style="width: auto;" id="purpose-{{ template.id }}">
-                                                        <option value="">Select Purpose</option>
-                                                        {% for purpose in purposes %}
-                                                            <option value="{{ purpose.id }}">{{ purpose.description }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                    <a href="{% url 'generate_report_pdf' template.id %}" 
-                                                    class="btn btn-primary btn-sm"
-                                                    onclick="return generatePdfWithPurpose(this, '{{ template.id }}')">
-                                                        Generate PDF
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}                                    
-                                    </tbody>
-                                </table>
+                            {% empty %}
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>No report templates are currently available.
+                                </div>
                             </div>
+                            {% endfor %}
                         </div>
                     </div>
                 </main>
@@ -70,9 +124,9 @@
                         <div class="d-flex align-items-center justify-content-between small">
                             <div class="text-muted">Copyright © Academic File Request System 2024</div>
                             <div>
-                                <a href="#">Privacy Policy</a>
+                                <a href="#" style="color: rgba(3, 133, 35, 0.8);">Privacy Policy</a>
                                 ·
-                                <a href="#">Terms & Conditions</a>
+                                <a href="#" style="color: rgba(3, 133, 35, 0.8);">Terms & Conditions</a>
                             </div>
                         </div>
                     </div>
@@ -81,37 +135,5 @@
         </div>
         
         {% include 'footer.html' %}
-
-        <script>
-            function openPdfInPopup(url) {
-                // Open popup window centered on screen
-                var width = 1000;
-                var height = 1000;
-                var left = (screen.width - width) / 2;
-                var top = (screen.height - height) / 2;
-                
-                window.open(url, 'PdfViewer', 
-                    'width=' + width + 
-                    ',height=' + height + 
-                    ',top=' + top + 
-                    ',left=' + left + 
-                    ',resizable=yes,scrollbars=yes,toolbar=no,menubar=no');
-                return false;
-            }
-
-            function generatePdfWithPurpose(link, templateId) {
-                const purposeSelect = document.getElementById('purpose-' + templateId);
-                const purposeId = purposeSelect.value;
-                
-                if (!purposeId) {
-                    alert('Please select a purpose first');
-                    return false;
-                }
-                
-                const url = link.href + '?purpose=' + purposeId;
-                return openPdfInPopup(url);
-            }
-        </script>
-    </body>
     </body>
 </html>

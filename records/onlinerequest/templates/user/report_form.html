@@ -1,0 +1,372 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>Generate {{ template.name }}</title>
+        {% include 'header.html' %}
+        <style>
+            .card {
+                border: none;
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+            }
+            
+            .card-header {
+                background-color: rgba(3, 133, 35, 0.8);
+                color: white;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+                padding: 15px 20px;
+            }
+            
+            .form-section {
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            }
+            
+            .form-section-title {
+                color: rgba(3, 133, 35, 1);
+                font-weight: 600;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+                border-bottom: 2px solid rgba(3, 133, 35, 0.2);
+            }
+            
+            .required-field label:after {
+                content: " *";
+                color: #dc3545;
+            }
+            
+            .form-buttons {
+                text-align: right;
+                margin-top: 20px;
+            }
+            
+            .btn-primary {
+                background-color: rgba(3, 133, 35, 1);
+                border-color: rgba(3, 133, 35, 1);
+            }
+            
+            .btn-primary:hover {
+                background-color: rgba(2, 113, 30, 1);
+                border-color: rgba(2, 113, 30, 1);
+            }
+            
+            .btn-secondary {
+                background-color: #6c757d;
+                border-color: #6c757d;
+            }
+        </style>
+    </head>
+
+    <body class="sb-nav-fixed">
+
+        {% include 'user/user-topnav.html' %}
+
+        <div id="layoutSidenav">
+            {% include 'user/user-sidenav.html' %}
+
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4">
+                        <h1 class="mt-4">Generate Document: {{ template.name }}</h1>
+                        <ol class="breadcrumb mb-4">
+                            <li class="breadcrumb-item"><a href="/user/dashboard/" style="color: rgba(3, 133, 35, 1);">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'reports' %}" style="color: rgba(3, 133, 35, 1);">Reports</a></li>
+                            <li class="breadcrumb-item active">{{ template.name }}</li>
+                        </ol>
+                        
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="fas fa-file-alt me-1"></i>
+                                Review Your Information
+                            </div>
+                            <div class="card-body">
+                                <form method="post" action="{% url 'generate_report_pdf' template.id %}" class="form-container">
+                                    {% csrf_token %}
+                                    
+                                    <div class="form-section">
+                                        <div class="form-section-title">Personal Information</div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3 required-field">
+                                                    <label for="first_name" class="form-label">First Name</label>
+                                                    <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user_data.first_name }}" required>
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="middle_name" class="form-label">Middle Name</label>
+                                                    <input type="text" class="form-control" id="middle_name" name="middle_name" value="{{ user_data.middle_name }}">
+                                                </div>
+                                                <div class="form-group mb-3 required-field">
+                                                    <label for="last_name" class="form-label">Last Name</label>
+                                                    <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user_data.last_name }}" required>
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="suffix" class="form-label">Suffix (Jr., Sr., etc.)</label>
+                                                    <input type="text" class="form-control" id="suffix" name="suffix" placeholder="Optional">
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="contact_no" class="form-label">Contact Number</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                                        <input type="text" class="form-control" id="contact_no" name="contact_no" value="{{ user_data.contact_no }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label for="entry_year_from" class="form-label">Entry Year (From)</label>
+                                                    <input type="text" class="form-control" id="entry_year_from" name="entry_year_from" value="{{ user_data.entry_year_from }}">
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="entry_year_to" class="form-label">Entry Year (To)</label>
+                                                    <input type="text" class="form-control" id="entry_year_to" name="entry_year_to" value="{{ user_data.entry_year_to }}">
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="course" class="form-label">Program</label>
+                                                    <select class="form-select" id="course" name="course">
+                                                        <option value="">Select Program</option>
+                                                        {% for course in all_courses %}
+                                                            <option value="{{ course.code }}" {% if course.code == user_data.course %}selected{% endif %}>
+                                                                {{ course.code }} - {{ course.description }}
+                                                            </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="student_number" class="form-label">Student Number</label>
+                                                    <input type="text" class="form-control" id="student_number" name="student_number" value="{{ user_data.student_number }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-section">
+                                        <div class="form-section-title">Additional Information</div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label for="email" class="form-label">Email</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                                        <input type="email" class="form-control" id="email" name="email" value="{{ user_data.email }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3 required-field">
+                                                    <label for="purpose" class="form-label">Purpose</label>
+                                                    <select class="form-select" id="purpose" name="purpose" required>
+                                                        <option value="">Select Purpose</option>
+                                                        {% for purpose in purposes %}
+                                                            <option value="{{ purpose.description }}">{{ purpose.description }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-section">
+                                        <div class="form-section-title">Output Options</div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3 required-field">
+                                                    <label class="form-label">Select Format</label>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="output_format" id="format_pdf" value="pdf" checked>
+                                                        <label class="form-check-label" for="format_pdf">
+                                                            <i class="fas fa-file-pdf text-danger"></i> PDF
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="output_format" id="format_docx" value="docx">
+                                                        <label class="form-check-label" for="format_docx">
+                                                            <i class="fas fa-file-word text-primary"></i> DOCX
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-buttons">
+                                        <a href="{% url 'reports' %}" class="btn btn-secondary">
+                                            <i class="fas fa-arrow-left me-1"></i> Back
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-file-export me-1"></i> Generate Document
+                                        </button>
+                                    </div>
+                                </form>
+                                
+                                <div class="mt-4">
+                                    <div class="alert alert-info" role="alert">
+                                        <i class="fas fa-info-circle me-2"></i> <strong>Note:</strong> 
+                                        Please review your information before generating the document. This will be used for official purposes.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright © Academic File Request System 2024</div>
+                            <div>
+                                <a href="#" style="color: rgba(3, 133, 35, 0.8);">Privacy Policy</a>
+                                ·
+                                <a href="#" style="color: rgba(3, 133, 35, 0.8);">Terms & Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        
+        {% include 'footer.html' %}
+        
+        <script>
+            $(document).ready(function() {
+                // Form validation
+                $('.form-container').submit(function(e) {
+                    let isValid = true;
+                    
+                    // Check required fields
+                    $('.required-field input, .required-field select').each(function() {
+                        if ($(this).val() === '') {
+                            isValid = false;
+                            $(this).addClass('is-invalid');
+                        } else {
+                            $(this).removeClass('is-invalid');
+                        }
+                    });
+                    
+                    if (!isValid) {
+                        e.preventDefault();
+                        
+                        // Scroll to first invalid field
+                        $('html, body').animate({
+                            scrollTop: $('.is-invalid:first').offset().top - 100
+                        }, 200);
+                        
+                        // Show error message
+                        if ($('#error-alert').length === 0) {
+                            $('.form-container').prepend(
+                                '<div id="error-alert" class="alert alert-danger mb-4">' +
+                                '<i class="fas fa-exclamation-circle me-2"></i> ' +
+                                'Please fill in all required fields marked with an asterisk (*).' +
+                                '</div>'
+                            );
+                        }
+                    }
+                });
+                
+                // Remove validation styling on input
+                $('.form-control, .form-select').on('input change', function() {
+                    if ($(this).val() !== '') {
+                        $(this).removeClass('is-invalid');
+                    }
+                });
+                
+                // Preview functionality (optional)
+                $('#previewBtn').click(function(e) {
+                    e.preventDefault();
+                    
+                    // Collect form data for preview
+                    const firstName = $('#first_name').val() || '[First Name]';
+                    const middleName = $('#middle_name').val() || '';
+                    const lastName = $('#last_name').val() || '[Last Name]';
+                    const suffix = $('#suffix').val() || '';
+                    
+                    let fullName = `${firstName} ${middleName} ${lastName}`;
+                    if (suffix) {
+                        fullName += `, ${suffix}`;
+                    }
+                    
+                    const studentNumber = $('#student_number').val() || '[Student Number]';
+                    const course = $('#course option:selected').text() || '[Program]';
+                    const purpose = $('#purpose option:selected').text() || '[Purpose]';
+                    
+                    // Show preview modal
+                    $('#previewModal .modal-body').html(`
+                        <div class="preview-document p-4 border rounded bg-light">
+                            <h4 class="text-center mb-4">Document Preview</h4>
+                            <p><strong>Name:</strong> ${fullName}</p>
+                            <p><strong>Student Number:</strong> ${studentNumber}</p>
+                            <p><strong>Program:</strong> ${course}</p>
+                            <p><strong>Contact:</strong> ${$('#contact_no').val() || '[Contact]'}</p>
+                            <p><strong>Email:</strong> ${$('#email').val() || '[Email]'}</p>
+                            <p><strong>Year:</strong> ${$('#entry_year_from').val() || '[Year From]'} - ${$('#entry_year_to').val() || '[Year To]'}</p>
+                            <p><strong>Purpose:</strong> ${purpose}</p>
+                            <p><strong>Date:</strong> ${new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})}</p>
+                        </div>
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i> This is a simplified preview. The actual document will be formatted according to the selected template.
+                        </div>
+                    `);
+                    
+                    $('#previewModal').modal('show');
+                });
+                
+                // Confirm form submission
+                $('#confirmSubmitBtn').click(function() {
+                    // Close modal and submit form
+                    $('#confirmModal').modal('hide');
+                    $('.form-container').submit();
+                });
+            });
+        </script>
+        
+        <!-- Preview Modal -->
+        <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="previewModalLabel">Document Preview</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Preview content will be inserted here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Confirmation Modal -->
+        <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmModalLabel">Confirm Generation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to generate this document with the provided information?</p>
+                        <p class="mb-0">Please confirm that all details are correct.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="confirmSubmitBtn">Generate Document</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+

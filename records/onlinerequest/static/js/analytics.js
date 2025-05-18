@@ -161,6 +161,38 @@ function initializeTable() {
     requestTable = new Tabulator("#requestTable", {
         ajaxURL: "/api/request-details/",
         ajaxResponse: function(url, params, response) {
+            // Process the response data to calculate and format processing time
+            response.forEach(row => {
+                // Check if both dates exist and are not null/undefined
+                if (row.date_requested && row.date_released) {
+                    try {
+                        // Parse the dates (assuming format "MMM DD, YYYY")
+                        const startDate = new Date(row.date_requested);
+                        const endDate = new Date(row.date_released);
+                        
+                        // Validate that dates parsed correctly
+                        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                            row.processing_time = "N/A";
+                        } else {
+                            // Calculate the difference in milliseconds
+                            const diffTime = Math.abs(endDate - startDate);
+                            
+                            // Convert to days and hours
+                            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                            const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            
+                            // Format the processing time
+                            row.processing_time = `${diffDays} days, ${diffHours} hrs`;
+                        }
+                    } catch (e) {
+                        // Handle any errors in date parsing
+                        row.processing_time = "N/A";
+                    }
+                } else {
+                    // If either date is missing, show N/A
+                    row.processing_time = "N/A";
+                }
+            });
             return response;
         },
         layout: "fitData",  // Fit columns to their data

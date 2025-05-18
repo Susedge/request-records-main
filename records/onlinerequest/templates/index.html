@@ -11,6 +11,21 @@
             background-color: #f8f9fa;
             font-family: 'Roboto', sans-serif;
         }
+        /* Override Bootstrap's primary color */
+        .btn-primary {
+            background-color: rgba(3,133,35,255);
+            border-color: rgba(3,133,35,255);
+        }
+        .btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+            background-color: rgba(2,113,30,255) !important;
+            border-color: rgba(2,113,30,255) !important;
+        }
+        .bg-primary, .badge-primary, .badge.bg-primary {
+            background-color: rgba(3,133,35,255) !important;
+        }
+        .text-primary {
+            color: rgba(3,133,35,255) !important;
+        }
         .jumbotron {
             background-image: url(static/images/files-blurred.png);
             background-size: cover;
@@ -77,6 +92,7 @@
         ::-webkit-scrollbar-thumb:hover {
             background-color: #555;
         }
+
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -114,7 +130,7 @@
                                     {% endfor %}
                                 </ul>
                             </div>
-                            <a href="/signup/" class="btn btn-secondary w-75 card-hover-btn mt-0">Request</a>
+                            <a href="/signup/" class="btn btn-primary w-75 card-hover-btn mt-0">Request</a>
                         </div>
                     </div>
                 {% endfor %}

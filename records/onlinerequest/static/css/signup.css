@@ -65,7 +65,7 @@ body {
   position: absolute;
   height: 100%;
   width: 100%;
-  background: #7d2ae8;
+  background: rgba(3,133,35,255);
   opacity: 0.5;
   z-index: 12;
 }
@@ -139,7 +139,7 @@ body {
   bottom: 0;
   height: 3px;
   width: 25px;
-  background: #7d2ae8;
+  background: rgba(3,133,35,255);
 }
 
 .forms .signup-form .title:before {
@@ -176,12 +176,12 @@ body {
 .form-content .input-box input:valid,
 .form-content .input-box select:focus,
 .form-content .input-box select:valid {
-  border-color: #7d2ae8;
+  border-color: rgba(3,133,35,255);
 }
 
 .form-content .input-box i {
   position: absolute;
-  color: #7d2ae8;
+  color: rgba(3,133,35,255);
   font-size: 17px;
 }
 
@@ -207,7 +207,7 @@ body {
 .forms .form-content .button input,
 .forms .form-content .button select {
   color: #fff;
-  background: #7d2ae8;
+  background: rgba(3,133,35,255);
   border-radius: 6px;
   padding: 0;
   cursor: pointer;
@@ -215,11 +215,11 @@ body {
 }
 
 .forms .form-content .button input:hover {
-  background: #5b13b9;
+  background: rgba(2,113,30,255);
 }
 
 .forms .form-content label {
-  color: #5b13b9;
+  color: rgba(2,113,30,255);
   cursor: pointer;
 }
 
@@ -342,7 +342,7 @@ input[type="file"] {
   bottom: 0;
   height: 3px;
   width: 25px;
-  background: #7d2ae8;
+  background: rgba(3,133,35,255);
 }
 
 #otpModal .input-boxes {
@@ -371,18 +371,18 @@ input[type="file"] {
 }
 
 #otpModal .input-box input:focus {
-  border-color: #7d2ae8;
+  border-color: rgba(3,133,35,255);
 }
 
 #otpModal .input-box i {
   position: absolute;
-  color: #7d2ae8;
+  color: rgba(3,133,35,255);
   font-size: 17px;
 }
 
 #otpModal .button input {
   color: #fff;
-  background: #7d2ae8;
+  background: rgba(3,133,35,255);
   border-radius: 6px;
   padding: 0;
   cursor: pointer;
@@ -390,7 +390,7 @@ input[type="file"] {
 }
 
 #otpModal .button input:hover {
-  background: #5b13b9;
+  background: rgba(2,113,30,255);
 }
 
 .close-otp {
@@ -434,7 +434,7 @@ input[type="file"] {
 /* Success Modal Styles */
 #successOkBtn {
   color: #fff;
-  background: #7d2ae8;
+  background: rgba(3,133,35,255);
   border-radius: 6px;
   border: none;
   padding: 10px 30px;
@@ -447,11 +447,11 @@ input[type="file"] {
 }
 
 #successOkBtn:hover {
-  background: #5b13b9;
+  background: rgba(2,113,30,255);
 }
 
 #successModal .modal-content {
-  border-top: 4px solid #7d2ae8;
+  border-top: 4px solid rgba(3,133,35,255);
 }
 
 #successModal h2 {
@@ -469,7 +469,7 @@ input[type="file"] {
   bottom: -10px;
   height: 3px;
   width: 25px;
-  background: #7d2ae8;
+  background: rgba(3,133,35,255);
 }
 
 #successModal p {
@@ -502,7 +502,7 @@ input[type="file"] {
 }
 
 .password-requirements li .fa-check {
-  color: #28a745;
+  color: rgba(3,133,35,255);
 }
 
 .form-text {

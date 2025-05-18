@@ -1,8 +1,45 @@
 <style>
-    table.dataTable thead th{
-                padding: 10px;
+    table.dataTable thead th {
+        padding: 10px;
     }
 
+    /* Dark Complementary Theme for User Sidebar */
+    .sb-sidenav-dark {
+        background-color: rgba(20, 40, 20, 1);
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-menu .sb-sidenav-menu-heading {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link:hover {
+        color: #fff;
+        background-color: rgba(3, 133, 35, 0.5);
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link.active {
+        background-color: rgba(3, 133, 35, 0.7);
+        color: white;
+        font-weight: 500;
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link .sb-nav-link-icon {
+        color: rgba(3, 133, 35, 0.8);
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link:hover .sb-nav-link-icon {
+        color: rgba(3, 133, 35, 1);
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-footer {
+        background-color: rgba(15, 30, 15, 1);
+        color: rgba(255, 255, 255, 0.8);
+    }
 </style>
 
 <div id="layoutSidenav_nav">
@@ -26,10 +63,9 @@
                 </a>
             </div>
         </div>
-    <!--    <div class="sb-sidenav-footer">
+        <div class="sb-sidenav-footer">
             <div class="small">Logged in as:</div>
             {{ user_record.first_name|default:'Username' }} {{ user_record.last_name|default:'' }}
         </div>
-        -->
     </nav>
 </div>
