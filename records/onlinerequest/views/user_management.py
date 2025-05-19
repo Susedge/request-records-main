@@ -116,6 +116,24 @@ def save_user_profile(request):
             except (ValueError, TypeError):
                 entry_year_to = 2000  # Default if conversion fails
             
+            # Handle contact number for IntegerField limit (max value: 2,147,483,647)
+            contact_input = request.POST.get('contact_no', '')
+            
+            # Method 1: Use a default safe value
+            contact_no = 1234567890  # Default safe integer
+            
+            # Method 2: Try to make a valid integer from input (just the last 9 digits)
+            try:
+                # Get only the digits
+                contact_digits = ''.join(c for c in contact_input if c.isdigit())
+                # Use only the last 9 digits to ensure it's within range
+                contact_digits = contact_digits[-9:] if contact_digits else ''
+                if contact_digits:
+                    contact_no = int(contact_digits)
+            except (ValueError, TypeError):
+                # Fallback to the default if there's an error
+                pass
+            
             # Prepare record data
             record_data = {
                 'user_number': user.student_number,
@@ -123,7 +141,7 @@ def save_user_profile(request):
                 'middle_name': request.POST.get('middle_name'),
                 'last_name': request.POST.get('last_name'),
                 'course_code': request.POST.get('course_code'),
-                'contact_no': request.POST.get('contact_no'),
+                'contact_no': contact_no,  # Now a safe integer value
                 'entry_year_from': entry_year_from,
                 'entry_year_to': entry_year_to
             }
@@ -150,6 +168,8 @@ def save_user_profile(request):
                 'message': 'User not found'
             })
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return JsonResponse({
                 'status': False, 
                 'message': f'Error: {str(e)}'
