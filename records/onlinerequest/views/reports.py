@@ -7,9 +7,9 @@ from ..models import Profile, ReportTemplate, Purpose, Course
 from datetime import datetime
 import io
 import tempfile
+import time
+import shutil
 from django.utils.text import slugify
-import pythoncom
-from docx2pdf import convert
 from django.contrib.auth.decorators import login_required
 
 @login_required
@@ -64,6 +64,76 @@ def report_form(request, template_id):
         'user_data': user_data
     })
 
+def convert_with_pylovepdf(docx_path, pdf_path):
+    """
+    Convert DOCX to PDF using the pylovepdf library
+    """
+    try:
+        from pylovepdf.tools.officepdf import OfficeToPdf
+        
+        # Initialize the task
+        task = OfficeToPdf(settings.ILOVEPDF_PUBLIC_KEY, verify_ssl=True, proxies=None)
+        
+        # Add file to the task
+        task.add_file(docx_path)
+        
+        # Set output folder (same as input folder by default)
+        output_dir = os.path.dirname(pdf_path)
+        task.set_output_folder(output_dir)
+        
+        # Process the task
+        task.execute()
+        
+        # Download processed files
+        task.download()
+        
+        # Print debug info about available files
+        print(f"Files in output directory after download: {os.listdir(output_dir)}")
+        
+        # Find the converted PDF file - looking for any PDF file created after task execution
+        pdf_found = False
+        
+        # Get the time before we started processing
+        last_modified_time = time.time()
+        
+        for file in os.listdir(output_dir):
+            print(f"Checking file: {file}")
+            file_path = os.path.join(output_dir, file)
+            
+            # Check if this is a PDF file created during this operation
+            if file.endswith(".pdf"):
+                # Copy the file to the expected location
+                try:
+                    shutil.copy2(file_path, pdf_path)
+                    print(f"Successfully copied to: {pdf_path}")
+                    pdf_found = True
+                    break
+                except Exception as e:
+                    print(f"Error copying file: {str(e)}")
+        
+        # Delete the task from the server
+        task.delete_current_task()
+        
+        # Verify the file exists at the expected location
+        if os.path.exists(pdf_path):
+            print(f"PDF exists at target path: {pdf_path}")
+            with open(pdf_path, 'rb') as f:
+                size = len(f.read())
+                print(f"PDF file size: {size} bytes")
+            return True
+        elif pdf_found:
+            print(f"PDF was found but may not exist at: {pdf_path}")
+            return True
+        else:
+            print(f"Could not find converted PDF file")
+            return False
+            
+    except Exception as e:
+        print(f"PyLovePDF conversion error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False
+
 @login_required
 def generate_report_pdf(request, template_id):
     if request.method != 'POST':
@@ -101,9 +171,6 @@ def generate_report_pdf(request, template_id):
     }
     
     try:
-        # Initialize COM for PDF conversion
-        pythoncom.CoInitialize()
-        
         # Setup directories
         generated_dir = os.path.join(settings.MEDIA_ROOT, 'reports', 'generated')
         os.makedirs(generated_dir, exist_ok=True)
@@ -124,7 +191,28 @@ def generate_report_pdf(request, template_id):
         # Handle PDF conversion if needed
         if output_format == 'pdf':
             pdf_path = os.path.join(generated_dir, f"{safe_name}.pdf")
-            convert(docx_path, pdf_path)
+            
+            # Convert using PyLovePDF instead of docx2pdf
+            print(f"Starting PDF conversion with PyLovePDF...")
+            if not convert_with_pylovepdf(docx_path, pdf_path):
+                raise Exception("PyLovePDF conversion failed. Check logs for details.")
+            
+            print(f"PDF conversion completed successfully.")
+            print(f"Output PDF path: {pdf_path}")
+            print(f"PDF exists: {os.path.exists(pdf_path)}")
+            
+            # After conversion
+            if not os.path.exists(pdf_path):
+                print(f"Critical: PDF not found at {pdf_path} after conversion")
+                print(f"Generated dir contents: {os.listdir(generated_dir)}")
+            else:
+                try:
+                    # Check file is readable
+                    with open(pdf_path, 'rb') as f:
+                        first_bytes = f.read(100)
+                        print(f"PDF file can be opened and read ({len(first_bytes)} bytes read)")
+                except Exception as open_error:
+                    print(f"Error opening PDF file: {str(open_error)}")
             
             # Determine appropriate filename for the user
             output_filename = f"{template.name.replace(' ', '_')}_{datetime.now().strftime('%Y-%m-%d')}.pdf"
