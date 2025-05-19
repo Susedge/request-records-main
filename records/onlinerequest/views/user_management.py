@@ -99,6 +99,23 @@ def save_user_profile(request):
         try:
             user = User.objects.get(id=user_id)
             
+            # Process year values safely
+            try:
+                entry_year_from = int(request.POST.get('entry_year_from', '0'))
+                # Validate year is within a reasonable range
+                if entry_year_from < 1900 or entry_year_from > 2100:
+                    entry_year_from = 2000  # Default to a safe value
+            except (ValueError, TypeError):
+                entry_year_from = 2000  # Default if conversion fails
+                
+            try:
+                entry_year_to = int(request.POST.get('entry_year_to', '0'))
+                # Validate year is within a reasonable range
+                if entry_year_to < 1900 or entry_year_to > 2100:
+                    entry_year_to = 2000  # Default to a safe value
+            except (ValueError, TypeError):
+                entry_year_to = 2000  # Default if conversion fails
+            
             # Prepare record data
             record_data = {
                 'user_number': user.student_number,
@@ -107,8 +124,8 @@ def save_user_profile(request):
                 'last_name': request.POST.get('last_name'),
                 'course_code': request.POST.get('course_code'),
                 'contact_no': request.POST.get('contact_no'),
-                'entry_year_from': request.POST.get('entry_year_from'),
-                'entry_year_to': request.POST.get('entry_year_to')
+                'entry_year_from': entry_year_from,
+                'entry_year_to': entry_year_to
             }
             
             # Create or update record
