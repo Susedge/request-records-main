@@ -22,45 +22,6 @@
                 <main>
                     <div class="container-fluid px-4">
                         <h1 class="mt-4">Template Management</h1>
-                        
-                        <!-- Student Search Section -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <i class="fas fa-search me-1"></i>
-                                Search Student
-                            </div>
-                            <div class="card-body">
-                                <div class="row mb-3">
-                                    <div class="col-md-8">
-                                        <div class="input-group">
-                                            <input type="text" id="student-search" class="form-control" 
-                                                   placeholder="Search by name or student number...">
-                                            <button class="btn btn-primary" id="search-button" type="button">
-                                                <i class="fas fa-search"></i> Search
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="search-results" class="mt-3" style="display: none;">
-                                    <h5>Search Results</h5>
-                                    <table class="table table-hover" id="students-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Student Number</th>
-                                                <th>Name</th>
-                                                <th>Program</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="student-results-body">
-                                            <!-- Results will be populated here -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        
                         <div class="card mb-4">
                             <div class="card-header">
                                 <i class="fas fa-file-pdf me-1"></i>
@@ -109,79 +70,5 @@
         </div>
         
         {% include 'footer.html' %}
-        
-        <script>
-            $(document).ready(function() {
-                // Search functionality
-                $('#search-button').click(function() {
-                    searchStudents();
-                });
-                
-                $('#student-search').keypress(function(e) {
-                    if(e.which == 13) { // Enter key
-                        searchStudents();
-                    }
-                });
-                
-                function searchStudents() {
-                    const query = $('#student-search').val();
-                    if (query.length < 2) {
-                        alert('Please enter at least 2 characters to search');
-                        return;
-                    }
-                    
-                    $.ajax({
-                        url: '{% url "search_students" %}',
-                        data: { 'query': query },
-                        dataType: 'json',
-                        success: function(data) {
-                            displaySearchResults(data);
-                        },
-                        error: function(xhr, status, error) {
-                            alert('Error searching for students: ' + error);
-                        }
-                    });
-                }
-                
-                function displaySearchResults(data) {
-                    const resultsBody = $('#student-results-body');
-                    resultsBody.empty();
-                    
-                    if (data.students.length === 0) {
-                        resultsBody.append('<tr><td colspan="4" class="text-center">No students found</td></tr>');
-                    } else {
-                        data.students.forEach(function(student) {
-                            let row = `<tr>
-                                <td>${student.student_number}</td>
-                                <td>${student.full_name}</td>
-                                <td>${student.course}</td>
-                                <td>
-                                    <div class="dropdown">
-                                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" 
-                                                id="dropdownMenuButton${student.id}" data-bs-toggle="dropdown" 
-                                                aria-expanded="false">
-                                            Select Template
-                                        </button>
-                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton${student.id}">
-                                            {% for template in templates %}
-                                            <li>
-                                                <a class="dropdown-item" 
-                                                   href="{% url 'admin_report_form' template.id %}?student_id=${student.id}">
-                                                   {{ template.name }}
-                                                </a>
-                                            </li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>`;
-                            resultsBody.append(row);
-                        });
-                    }
-                    
-                    $('#search-results').show();
-                }
-            });
-        </script>
     </body>
 </html>

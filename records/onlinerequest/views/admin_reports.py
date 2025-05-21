@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import FileResponse, Http404, JsonResponse
+from django.http import FileResponse, Http404
 from django.conf import settings
 from docxtpl import DocxTemplate
 import os
@@ -7,7 +7,7 @@ import subprocess
 import shutil
 import requests
 import json
-from ..models import ReportTemplate, Purpose, Student
+from ..models import ReportTemplate, Purpose
 from datetime import datetime
 import time
 import io
@@ -19,80 +19,18 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from django.db.models import Q
 
 
 def admin_reports(request):
     templates = ReportTemplate.objects.all()
     return render(request, 'admin/admin_reports.html', {'templates': templates})
 
-def search_students(request):
-    query = request.GET.get('query', '')
-    
-    if len(query) < 2:
-        return JsonResponse({'students': []})
-    
-    # Search for students matching the query
-    students = Student.objects.filter(
-        Q(first_name__icontains=query) | 
-        Q(last_name__icontains=query) | 
-        Q(student_number__icontains=query)
-    )[:10]  # Limit to 10 results
-    
-    student_data = []
-    for student in students:
-        full_name = f"{student.first_name}"
-        if student.middle_name:
-            full_name += f" {student.middle_name}"
-        full_name += f" {student.last_name}"
-        if student.suffix:
-            full_name += f", {student.suffix}"
-            
-        student_data.append({
-            'id': student.id,
-            'student_number': student.student_number,
-            'full_name': full_name,
-            'course': student.course.code if hasattr(student, 'course') and student.course else '',
-            'first_name': student.first_name,
-            'middle_name': student.middle_name,
-            'last_name': student.last_name,
-            'suffix': student.suffix,
-            'contact_no': student.contact_no if hasattr(student, 'contact_no') else '',
-            'email': student.email if hasattr(student, 'email') else '',
-        })
-    
-    return JsonResponse({'students': student_data})
-
 def admin_report_form(request, template_id):
     template = get_object_or_404(ReportTemplate, id=template_id)
     purposes = Purpose.objects.filter(active=True)
-    
-    # Check if student_id is provided for pre-filling the form
-    student_id = request.GET.get('student_id')
-    student_data = None
-    
-    if student_id:
-        try:
-            student = Student.objects.get(id=student_id)
-            student_data = {
-                'first_name': student.first_name,
-                'middle_name': student.middle_name,
-                'last_name': student.last_name,
-                'suffix': student.suffix,
-                'contact_no': student.contact_no if hasattr(student, 'contact_no') else '',
-                'email': student.email if hasattr(student, 'email') else '',
-                'student_number': student.student_number,
-                'course': student.course.code if hasattr(student, 'course') and student.course else '',
-                'entry_year_from': student.entry_year_from if hasattr(student, 'entry_year_from') else '',
-                'entry_year_to': student.entry_year_to if hasattr(student, 'entry_year_to') else '',
-            }
-        except Student.DoesNotExist:
-            pass
-    
     return render(request, 'admin/report_form.html', {
         'template': template,
-        'purposes': purposes,
-        'student_data': student_data
+        'purposes': purposes
     })
 
 def convert_with_pylovepdf(docx_path, pdf_path):
