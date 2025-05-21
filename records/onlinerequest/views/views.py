@@ -69,7 +69,10 @@ def get_request_stats(request):
                        .annotate(count=Count('id'))\
                        .order_by('-count')
     
+
+
     # Processing time stats
+    '''
     completed_requests = requests.filter(status='Completed')
     processing_times = []
     
@@ -94,6 +97,35 @@ def get_request_stats(request):
         'document_stats': list(doc_stats),
         'processing_times': processing_times
     })
+'''
+    # try processing time
+completed_requests = requests.filter(status='Completed')
+processing_times = []
+
+for req in completed_requests:
+    time_diff = req.updated_at - req.created_at
+    days = time_diff.days
+    hours = time_diff.seconds // 3600
+    minutes = (time_diff.seconds % 3600) // 60  # Calculate remaining minutes
+    status = 'Completed'
+    
+    if time_diff > timedelta(days=3):
+        status = 'late'
+        
+    processing_times.append({
+        'request_id': req.id,
+        'days': days,
+        'hours': hours,
+        'minutes': minutes,  # Added minutes field
+        'status': status
+    })
+
+return JsonResponse({
+    'total_requests': requests.count(),
+    'document_stats': list(doc_stats),
+    'processing_times': processing_times
+})
+
 
 # Add to your existing imports at the top
 from django.db.models import F
