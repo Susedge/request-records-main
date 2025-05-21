@@ -8,141 +8,263 @@
 
     <style>
         body {
-            background-color: #f8f9fa;
-            font-family: 'Roboto', sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            color: #4F4F4F;
+            background: rgb(180,227,145);
+            background: linear-gradient(to bottom, rgba(180,227,145,1) 0%,rgba(255,255,255,1) 50%,rgba(180,227,145,1) 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
         }
-        /* Override Bootstrap's primary color */
-        .btn-primary {
-            background-color: rgba(3,133,35,255);
-            border-color: rgba(3,133,35,255);
+        
+        .page-header {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-bottom: 2px solid #5a8a47;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 12px;
         }
-        .btn-primary:hover, .btn-primary:focus, .btn-primary:active {
-            background-color: rgba(2,113,30,255) !important;
-            border-color: rgba(2,113,30,255) !important;
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .bg-primary, .badge-primary, .badge.bg-primary {
-            background-color: rgba(3,133,35,255) !important;
+        
+        .title-container h1 {
+            color: #4a7a3d;
+            margin: 0;
+            font-size: 24px;
         }
-        .text-primary {
-            color: rgba(3,133,35,255) !important;
+        
+        .title-container p {
+            margin: 2px 0 0 0;
+            color: #5a8a47;
+            font-size: 12px;
         }
-        .jumbotron {
-            background-image: url(static/images/files-blurred.png);
-            background-size: cover;
-            color: #fff;
-            padding: 4rem 2rem;
+        
+        .logo-container img {
+            height: 60px;
+            width: auto;
         }
+        
+        .main-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .section-title {
+            color: #4a7a3d;
+            border-bottom: 2px solid #5a8a47;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .welcome-section {
+            text-align: center;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .welcome-title {
+            color: #4a7a3d;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .welcome-text {
+            color: #4F4F4F;
+            max-width: 700px;
+            margin: 0 auto 15px auto;
+            line-height: 1.5;
+        }
+        
+        .get-started-btn {
+            background-color: #5a8a47;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin-top: 5px;
+        }
+        
+        .get-started-btn:hover {
+            background-color: #4a7a3d;
+            color: white;
+            text-decoration: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
         .card {
             border: none;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: box-shadow 0.3s;
+            border-radius: 5px;
             position: relative;
+            margin-bottom: 15px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            height: calc(100% - 15px);
+            overflow: hidden;
         }
-        .card-header{
-          background-color: rgb(233, 231, 231);
+        
+        .card-header {
+            background-color: #5a8a47;
+            color: white;
+            padding: 10px 12px;
+            border-bottom: none;
         }
-        .card-body{
-          background-image: url(static/images/paper.jpg);
-          background-repeat: no-repeat;
-          background-size: cover;
-          padding-bottom: 50px;
+        
+        .card-body {
+            padding: 12px;
+            background-color: white;
+            padding-bottom: 45px;
         }
-        .card:hover {
-            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
-        }
+        
         .card-title {
             font-weight: bold;
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
+            color: white;
+            font-size: 14px;
+            margin-bottom: 2px;
         }
-        .card-hover-btn {
-            position: absolute; 
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.3s;
+        
+        .card-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            margin-bottom: 0;
         }
-        .card:hover .card-hover-btn {
-            opacity: 1;
+        
+        .badge-price {
+            background-color: #3a6a2d;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
         }
+        
         .required-files {
-            margin-top: 10px;
             list-style-type: square;
+            padding-left: 15px;
+            margin: 5px 0;
+            font-size: 12px;
         }
+        
         .required-files li {
             margin-bottom: 2px;
-            margin-left: 20px;
         }
-
-        /* Custom scrollbar styles */
-        ::-webkit-scrollbar {
-            width: 6px;
+        
+        .btn-request {
+            background-color: #5a8a47;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-
-        ::-webkit-scrollbar-track {
-            background-color: #f1f1f1;
+        
+        .btn-request:hover {
+            background-color: #4a7a3d;
+            color: white;
+            text-decoration: none;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
         }
-
-        ::-webkit-scrollbar-thumb {
-            background-color: #888;
-            border-radius: 3px;
+        
+        footer {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #4F4F4F;
+            text-align: center;
+            padding: 8px 0;
+            border-top: 1px solid #ddd;
+            margin-top: 12px;
+            font-size: 12px;
         }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background-color: #555;
-        }
-
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <div class="jumbotron text-center">
-        <h1 class="display-4">Academic File Request System</h1>
-        <p class="lead">Your One-Stop Solution for Academic Document Requests</p>
-        <hr class="my-4">
-        <a href="/signup/" class="btn btn-primary">Get Started</a>
-    </div>
-
-    <div class="container mt-4">
-      <h3 class="text-center text-secondary fw-bold">AVAILABLE DOCUMENTS</h3>
-      <hr>
-        {% if request_forms %}
-            <div class="row row-cols-1 row-cols-md-3 g-4">
-                {% for request_form in request_forms %}
-                    <div class="col">
-                        <div class="card h-100">
-                            <div class="card-header">
-                              <div class="d-flex justify-content-between">
-                                <div>
-                                  <h5 class="card-title text-primary mb-0">{{ request_form.document.description }}</h5>
-                                  <p class="card-text text-muted">{{ request_form.description }}</p>
-                                </div>
-                                <div>
-                                  <span class="badge bg-primary">PHP{{ request_form.price }}</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="card-body">
-                                <p class="card-text mb-2"><strong>Required Files:</strong></p>
-                                <ul class="required-files">
-                                    {% for description in request_form.requirement_descriptions %}
-                                        <li>{{ description }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            <a href="/signup/" class="btn btn-primary w-75 card-hover-btn mt-0">Request</a>
-                        </div>
-                    </div>
-                {% endfor %}
+    <div class="page-header">
+        <div class="container header-content">
+            <div class="title-container">
+                <h1>Academic File Request System</h1>
+                <p>Your One-Stop Solution for Academic Document Requests</p>
             </div>
-        {% else %}
-            <p class="text-center">No request forms found.</p>
-        {% endif %}
+            <div class="logo-container">
+                <img src="static/images/tau-logo.png" alt="TAU Logo">
+            </div>
+        </div>
     </div>
 
-    <footer class="footer mt-auto text-center py-3">
-        <div class="container mt-5">
-            <p>&copy; {% now "Y" %} Academic File Request System. All rights reserved.</p>
+    <div class="container">
+        <div class="main-container">
+            <!-- Welcome Section - Centered -->
+            <div class="welcome-section">
+                <h4 class="welcome-title">Welcome to the Academic File Request Portal</h4>
+                <p class="welcome-text">Request academic documents and certificates quickly and efficiently without the hassle of long queues and paperwork.</p>
+                <a href="/signup/" class="get-started-btn">GET STARTED</a>
+            </div>
+            
+            <!-- Documents Section -->
+            <h3 class="section-title">AVAILABLE DOCUMENTS</h3>
+            
+            {% if request_forms %}
+                <div class="row row-cols-1 row-cols-md-3 g-3">
+                    {% for request_form in request_forms %}
+                        <div class="col">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="card-title">{{ request_form.document.description }}</h5>
+                                            <p class="card-text">{{ request_form.description }}</p>
+                                        </div>
+                                        <div>
+                                            <span class="badge-price">PHP{{ request_form.price }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-1"><strong>Required Files:</strong></p>
+                                    <ul class="required-files">
+                                        {% for description in request_form.requirement_descriptions %}
+                                            <li>{{ description }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                    <a href="/signup/" class="btn-request">Request</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-center">No request forms found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <footer class="footer mt-auto py-2">
+        <div class="container">
+            <p class="mb-0">&copy; {% now "Y" %} Academic File Request System. All rights reserved.</p>
         </div>
     </footer>
 

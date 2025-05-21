@@ -1,0 +1,122 @@
+/* Common Styles for Academic File Request System */
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    color: #4F4F4F;
+    background: rgb(180,227,145);
+    background: linear-gradient(to bottom, rgba(180,227,145,1) 0%,rgba(255,255,255,1) 50%,rgba(180,227,145,1) 100%);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+
+/* Add TAU logo background */
+body::after {
+    content: "";
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    width: 400px;
+    height: 400px;
+    background-image: url(../images/tau-logo.png);
+    background-repeat: no-repeat;
+    background-size: contain;
+    opacity: 0.1;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.page-header {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-bottom: 2px solid #5a8a47;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 12px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.title-container h1 {
+    color: #4a7a3d;
+    margin: 0;
+    font-size: 24px;
+}
+
+.title-container p {
+    margin: 2px 0 0 0;
+    color: #5a8a47;
+    font-size: 12px;
+}
+
+.logo-container img {
+    height: 60px;
+    width: auto;
+}
+
+.section-title {
+    color: #4a7a3d;
+    border-bottom: 2px solid #5a8a47;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.main-container {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.btn-primary {
+    background-color: #5a8a47;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: bold;
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:hover {
+    background-color: #4a7a3d;
+    color: white;
+    text-decoration: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+footer {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #4F4F4F;
+    text-align: center;
+    padding: 8px 0;
+    border-top: 1px solid #ddd;
+    margin-top: 12px;
+    font-size: 12px;
+}
+
+.back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 24px;
+    color: #4a7a3d;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.back-button:hover {
+    color: #3a6a2d;
+}

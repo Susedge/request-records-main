@@ -1,44 +1,78 @@
-<style>
-    table.dataTable thead th {
-        padding: 10px;
-    }
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/common.css' %}" />
 
-    /* Dark Complementary Theme for User Sidebar */
-    .sb-sidenav-dark {
-        background-color: rgba(20, 40, 20, 1);
-        color: rgba(255, 255, 255, 0.9);
+<style>
+    /* Override Bootstrap's default striping by forcing all elements to have the same background */
+    .sb-sidenav-dark,
+    .sb-sidenav-dark .sb-sidenav-menu,
+    .sb-sidenav-dark .sb-sidenav-menu .nav,
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link,
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link:nth-child(odd),
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link:nth-child(even),
+    .sb-sidenav-menu-nested .nav-link,
+    .sb-sidenav-menu-nested .nav-link:nth-child(odd),
+    .sb-sidenav-menu-nested .nav-link:nth-child(even),
+    .collapse .nav,
+    .collapse .nav-link,
+    .collapse .nav-link:nth-child(odd),
+    .collapse .nav-link:nth-child(even) {
+        background-color: #3a6a2d !important;
     }
     
-    .sb-sidenav-dark .sb-sidenav-menu .sb-sidenav-menu-heading {
-        color: rgba(255, 255, 255, 0.6);
+    /* Only show different background on hover/active states */
+    .sb-sidenav-dark .nav-link:hover,
+    .sb-sidenav-dark .nav-link.active,
+    .sb-sidenav-dark .nav-link:not(.collapsed),
+    .sb-sidenav-menu-nested .nav-link:hover,
+    .sb-sidenav-menu-nested .nav-link.active {
+        background-color: #2c5122 !important;
+        border-left: 3px solid #8EB66F !important;
     }
     
+    /* Rest of the styling */
     .sb-sidenav-dark .sb-sidenav-menu .nav-link {
-        color: rgba(255, 255, 255, 0.8);
-    }
-    
-    .sb-sidenav-dark .sb-sidenav-menu .nav-link:hover {
-        color: #fff;
-        background-color: rgba(3, 133, 35, 0.5);
-    }
-    
-    .sb-sidenav-dark .sb-sidenav-menu .nav-link.active {
-        background-color: rgba(3, 133, 35, 0.7);
-        color: white;
-        font-weight: 500;
+        color: rgba(255, 255, 255, 0.8) !important;
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
     }
     
     .sb-sidenav-dark .sb-sidenav-menu .nav-link .sb-nav-link-icon {
-        color: rgba(3, 133, 35, 0.8);
+        color: rgba(255, 255, 255, 0.6) !important;
     }
     
-    .sb-sidenav-dark .sb-sidenav-menu .nav-link:hover .sb-nav-link-icon {
-        color: rgba(3, 133, 35, 1);
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link:hover .sb-nav-link-icon,
+    .sb-sidenav-dark .nav-link.active .sb-nav-link-icon {
+        color: rgba(255, 255, 255, 0.9) !important;
     }
     
-    .sb-sidenav-dark .sb-sidenav-footer {
-        background-color: rgba(15, 30, 15, 1);
-        color: rgba(255, 255, 255, 0.8);
+    .sb-sidenav-dark .sb-sidenav-menu .sb-sidenav-menu-heading {
+        color: rgba(255, 255, 255, 0.6) !important;
+        background-color: #3a6a2d !important;
+        font-weight: bold;
+        padding-top: 1rem;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+    }
+    
+    .sb-sidenav-menu-nested .nav-link {
+        padding-left: 2.5rem !important;
+        font-size: 0.9rem;
+    }
+    
+    /* Fix footer styling */
+    .sb-sidenav-footer {
+        background-color: #2a552a !important;
+        color: rgba(255, 255, 255, 0.8) !important;
+        padding: 0.75rem !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    .sb-sidenav-footer .small {
+        color: rgba(255, 255, 255, 0.6) !important;
+        font-size: 0.8rem !important;
+        margin-bottom: 0.25rem !important;
     }
 </style>
 

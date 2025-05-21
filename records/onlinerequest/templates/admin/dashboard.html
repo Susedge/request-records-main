@@ -10,9 +10,15 @@
         <meta name="author" content="" />
         <title>Dashboard - SB Admin</title>
         {% include 'header.html' %}
-
-        <!-- Custom CSS -->
-        <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}" />
+        
+        <style>
+        .welcome-card h1 {
+            color: #3a6a2d;
+            font-weight: bold;
+            margin: 0;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+        }
+        </style>
     </head>
 
     <body class="sb-nav-fixed">
@@ -26,14 +32,9 @@
                 <main>
                     <div class="container-fluid px-4">
 
-                        <div class="card my-3">
-                            <!-- <div class="card-header">
-                                Dashboard elements goes here
-                            </div> -->
-                            <div class="card-body text-white">
+                        <div class="card my-3 welcome-card">
+                            <div class="card-body text-dark">
                                 <h1>Welcome, TAU-ARS!</h1>
-
-                                <!--{{ user_record.first_name|default:'Superuser' }} {{ user_record.last_name|default:'' }}-->
                             </div>
                         </div>
                     </div>

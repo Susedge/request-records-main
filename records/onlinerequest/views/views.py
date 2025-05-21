@@ -76,7 +76,9 @@ def get_request_stats(request):
     for req in completed_requests:
         time_diff = req.updated_at - req.created_at
         days = time_diff.days
-        hours = time_diff.seconds // 3600
+        seconds_remainder = time_diff.seconds
+        hours = seconds_remainder // 3600
+        minutes = (seconds_remainder % 3600) // 60
         status = 'Completed'
         
         if time_diff > timedelta(days=3):
@@ -86,6 +88,7 @@ def get_request_stats(request):
             'request_id': req.id,
             'days': days,
             'hours': hours,
+            'minutes': minutes,
             'status': status
         })
 

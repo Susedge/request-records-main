@@ -5,7 +5,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Poppins", sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 body {
@@ -13,10 +13,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: url(../images/files-blurred.png);
-  background-size: cover;
-  background-position: center;
   padding: 30px;
+  position: relative;
 }
 
 .container {
@@ -27,6 +25,8 @@ body {
   padding: 40px 30px;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
   perspective: 2700px;
+  border-radius: 8px;
+  border-top: 3px solid #5a8a47;
 }
 
 .container .cover {
@@ -65,7 +65,7 @@ body {
   position: absolute;
   height: 100%;
   width: 100%;
-  background: rgba(3,133,35,255);
+  background: #5a8a47;
   opacity: 0.5;
   z-index: 12;
 }
@@ -129,7 +129,7 @@ body {
   position: relative;
   font-size: 24px;
   font-weight: 500;
-  color: #333;
+  color: #4a7a3d;
 }
 
 .forms .form-content .title:before {
@@ -139,7 +139,7 @@ body {
   bottom: 0;
   height: 3px;
   width: 25px;
-  background: rgba(3,133,35,255);
+  background: #5a8a47;
 }
 
 .forms .signup-form .title:before {
@@ -176,12 +176,12 @@ body {
 .form-content .input-box input:valid,
 .form-content .input-box select:focus,
 .form-content .input-box select:valid {
-  border-color: rgba(3,133,35,255);
+  border-color: #5a8a47;
 }
 
 .form-content .input-box i {
   position: absolute;
-  color: rgba(3,133,35,255);
+  color: #5a8a47;
   font-size: 17px;
 }
 
@@ -193,6 +193,7 @@ body {
 
 .forms .form-content .text a {
   text-decoration: none;
+  color: #5a8a47;
 }
 
 .forms .form-content .text a:hover {
@@ -207,7 +208,7 @@ body {
 .forms .form-content .button input,
 .forms .form-content .button select {
   color: #fff;
-  background: rgba(3,133,35,255);
+  background: #5a8a47;
   border-radius: 6px;
   padding: 0;
   cursor: pointer;
@@ -215,11 +216,11 @@ body {
 }
 
 .forms .form-content .button input:hover {
-  background: rgba(2,113,30,255);
+  background: #4a7a3d;
 }
 
 .forms .form-content label {
-  color: rgba(2,113,30,255);
+  color: #5a8a47;
   cursor: pointer;
 }
 
@@ -269,6 +270,8 @@ input[type="file"] {
   width: 80%;
   margin: 5% auto;
   padding: 40px;
+  border-radius: 8px;
+  border-top: 3px solid #5a8a47;
 }
 
 .close {
@@ -281,7 +284,7 @@ input[type="file"] {
 
 .close:hover,
 .close:focus {
-  color: black;
+  color: #4a7a3d;
   text-decoration: none;
   cursor: pointer;
 }
@@ -290,7 +293,7 @@ input[type="file"] {
   height: 30px !important;
   margin-top: 0px !important;
   margin-bottom: 5px !important;
-  background-color: #888 !important;
+  background-color: #5a8a47 !important;
 }
 
 .checkbox-container {
@@ -298,16 +301,8 @@ input[type="file"] {
 }
 
 .back-button {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  font-size: 24px;
-  color: #ffffff;
-  text-decoration: none;
-}
-
-.back-button:hover {
-  color: #000;
+  color: #4a7a3d;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
 }
 
 /* OTP */
@@ -331,7 +326,7 @@ input[type="file"] {
   position: relative;
   font-size: 24px;
   font-weight: 500;
-  color: #333;
+  color: #4a7a3d;
   margin-bottom: 20px;
 }
 
@@ -342,7 +337,7 @@ input[type="file"] {
   bottom: 0;
   height: 3px;
   width: 25px;
-  background: rgba(3,133,35,255);
+  background: #5a8a47;
 }
 
 #otpModal .input-boxes {
@@ -371,18 +366,18 @@ input[type="file"] {
 }
 
 #otpModal .input-box input:focus {
-  border-color: rgba(3,133,35,255);
+  border-color: #5a8a47;
 }
 
 #otpModal .input-box i {
   position: absolute;
-  color: rgba(3,133,35,255);
+  color: #5a8a47;
   font-size: 17px;
 }
 
 #otpModal .button input {
   color: #fff;
-  background: rgba(3,133,35,255);
+  background: #5a8a47;
   border-radius: 6px;
   padding: 0;
   cursor: pointer;
@@ -390,7 +385,7 @@ input[type="file"] {
 }
 
 #otpModal .button input:hover {
-  background: rgba(2,113,30,255);
+  background: #4a7a3d;
 }
 
 .close-otp {
@@ -402,7 +397,7 @@ input[type="file"] {
 }
 
 .close-otp:hover {
-  color: #333;
+  color: #4a7a3d;
 }
 
 /* OTP End */
@@ -434,7 +429,7 @@ input[type="file"] {
 /* Success Modal Styles */
 #successOkBtn {
   color: #fff;
-  background: rgba(3,133,35,255);
+  background: #5a8a47;
   border-radius: 6px;
   border: none;
   padding: 10px 30px;
@@ -447,15 +442,15 @@ input[type="file"] {
 }
 
 #successOkBtn:hover {
-  background: rgba(2,113,30,255);
+  background: #4a7a3d;
 }
 
 #successModal .modal-content {
-  border-top: 4px solid rgba(3,133,35,255);
+  border-top: 4px solid #5a8a47;
 }
 
 #successModal h2 {
-  color: #333;
+  color: #4a7a3d;
   position: relative;
   font-size: 24px;
   font-weight: 500;
@@ -469,7 +464,7 @@ input[type="file"] {
   bottom: -10px;
   height: 3px;
   width: 25px;
-  background: rgba(3,133,35,255);
+  background: #5a8a47;
 }
 
 #successModal p {
@@ -502,7 +497,7 @@ input[type="file"] {
 }
 
 .password-requirements li .fa-check {
-  color: rgba(3,133,35,255);
+  color: #28a745;
 }
 
 .form-text {
@@ -515,4 +510,24 @@ input[type="file"] {
   line-height: 1;
   position: relative;
   top: -5px;
+}
+
+#sendVerificationBtn {
+  background-color: #5a8a47;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#sendVerificationBtn:hover {
+  background-color: #4a7a3d;
+}
+
+#sendVerificationBtn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
