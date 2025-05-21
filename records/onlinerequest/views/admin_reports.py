@@ -85,44 +85,54 @@ def search_students(request):
 def admin_report_form(request, template_id):
     template = get_object_or_404(ReportTemplate, id=template_id)
     purposes = Purpose.objects.filter(active=True)
-    all_courses = Course.objects.all()  # Get all courses for the dropdown
+    all_courses = Course.objects.all()
     
-    # Check if student_id is provided for pre-filling the form
+    # Initialize empty student data
+    student_data = {
+        'first_name': '',
+        'last_name': '',
+        'middle_name': '',
+        'suffix': '',
+        'contact_no': '',
+        'entry_year_from': '',
+        'entry_year_to': '',
+        'course': '',
+        'student_number': '',
+        'email': '',
+    }
+    
+    # Check if student_id is provided in the URL parameters
     student_id = request.GET.get('student_id')
-    student_data = None
-    
     if student_id:
         try:
-            student = User.objects.get(id=student_id, user_type=1)  # Ensure it's a student
-            profile = getattr(student, 'profile', None)
+            # Get student user object
+            student_user = User.objects.get(id=student_id)
+            student_data['student_number'] = student_user.student_number
+            student_data['email'] = student_user.email
             
-            if profile:
-                student_data = {
+            # Get student profile if exists
+            try:
+                profile = Profile.objects.get(user=student_user)
+                student_data.update({
                     'first_name': profile.first_name,
-                    'middle_name': profile.middle_name,
                     'last_name': profile.last_name,
-                    'suffix': getattr(profile, 'suffix', ''),
-                    'contact_no': str(profile.contact_no) if profile.contact_no else '',
-                    'email': student.email,
-                    'student_number': student.student_number,
-                    'course': profile.course.code if hasattr(profile, 'course') and profile.course else '',
-                    'entry_year_from': profile.entry_year_from if hasattr(profile, 'entry_year_from') else '',
-                    'entry_year_to': profile.entry_year_to if hasattr(profile, 'entry_year_to') else '',
-                }
-            else:
-                # Basic data if no profile exists
-                student_data = {
-                    'email': student.email,
-                    'student_number': student.student_number,
-                }
+                    'middle_name': profile.middle_name,
+                    'suffix': profile.suffix if hasattr(profile, 'suffix') else '',
+                    'contact_no': profile.contact_no,
+                    'entry_year_from': profile.entry_year_from,
+                    'entry_year_to': profile.entry_year_to,
+                    'course': profile.course.code if profile.course else '',
+                })
+            except Profile.DoesNotExist:
+                pass
         except User.DoesNotExist:
             pass
     
     return render(request, 'admin/report_form.html', {
         'template': template,
         'purposes': purposes,
-        'student_data': student_data,
-        'all_courses': all_courses
+        'all_courses': all_courses,
+        'student_data': student_data
     })
 
 def convert_with_pylovepdf(docx_path, pdf_path):
