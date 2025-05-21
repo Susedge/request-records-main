@@ -7,7 +7,7 @@ import subprocess
 import shutil
 import requests
 import json
-from ..models import ReportTemplate, Purpose
+from ..models import ReportTemplate, Purpose, Student, Course
 from datetime import datetime
 import time
 import io
@@ -28,9 +28,35 @@ def admin_reports(request):
 def admin_report_form(request, template_id):
     template = get_object_or_404(ReportTemplate, id=template_id)
     purposes = Purpose.objects.filter(active=True)
+    all_courses = Course.objects.all()  # Get all courses for the dropdown
+    
+    # Check if student_id is provided for pre-filling the form
+    student_id = request.GET.get('student_id')
+    student_data = None
+    
+    if student_id:
+        try:
+            student = Student.objects.get(id=student_id)
+            student_data = {
+                'first_name': student.first_name,
+                'middle_name': student.middle_name,
+                'last_name': student.last_name,
+                'suffix': student.suffix,
+                'contact_no': student.contact_no if hasattr(student, 'contact_no') else '',
+                'email': student.email if hasattr(student, 'email') else '',
+                'student_number': student.student_number,
+                'course': student.course.code if hasattr(student, 'course') and student.course else '',
+                'entry_year_from': student.entry_year_from if hasattr(student, 'entry_year_from') else '',
+                'entry_year_to': student.entry_year_to if hasattr(student, 'entry_year_to') else '',
+            }
+        except Student.DoesNotExist:
+            pass
+    
     return render(request, 'admin/report_form.html', {
         'template': template,
-        'purposes': purposes
+        'purposes': purposes,
+        'student_data': student_data,
+        'all_courses': all_courses  # Pass courses to the template
     })
 
 def convert_with_pylovepdf(docx_path, pdf_path):

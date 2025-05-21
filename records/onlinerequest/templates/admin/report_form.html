@@ -74,7 +74,9 @@
                                                     <select class="form-select" id="course" name="course">
                                                         <option value="">Select Program</option>
                                                         {% for course in all_courses %}
-                                                            <option value="{{ course.code }}">{{ course.code }} - {{ course.description }}</option>
+                                                            <option value="{{ course.code }}" {% if student_data.course == course.code %}selected{% endif %}>
+                                                                {{ course.code }} - {{ course.description }}
+                                                            </option>
                                                         {% endfor %}
                                                     </select>
                                                 </div>
