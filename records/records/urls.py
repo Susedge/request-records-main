@@ -104,6 +104,8 @@ urlpatterns = [
     path('admin-panel/reports/form/<int:template_id>/', admin_reports.admin_report_form, name='admin_report_form'),
     path('admin-panel/reports/generate/<int:template_id>/', admin_reports.admin_generate_report_pdf, name='admin_generate_report_pdf'),
     path('admin-panel/search-students/', admin_reports.search_students, name='search_students'),
+    path('admin-panel/reports/store-student-session/', admin_reports.store_student_session, name='store_student_session'),
+    path('admin-panel/reports/clear-student-session/', admin_reports.clear_student_session, name='clear_student_session'),
 
     # Admin Gcash upload
     path('admin-panel/qr-upload/', qr_upload.upload_qr_code, name='upload_qr_code'),

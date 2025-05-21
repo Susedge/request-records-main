@@ -130,6 +130,15 @@
         
         <script>
             $(document).ready(function() {
+                // Clear any stored student session data when loading the search page
+                $.ajax({
+                    url: '{% url "clear_student_session" %}',
+                    method: 'POST',
+                    data: {
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    }
+                });
+                
                 // Search functionality
                 $('#search-button').click(function() {
                     searchStudents();
@@ -184,8 +193,9 @@
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton${student.id}">
                                                 {% for template in templates %}
                                                 <li>
-                                                    <a class="dropdown-item" 
-                                                       href="{% url 'admin_report_form' template.id %}?student_id=${student.id}">
+                                                    <a class="dropdown-item template-link" 
+                                                       href="{% url 'admin_report_form' template.id %}" 
+                                                       data-student-id="${student.id}">
                                                        {{ template.name }}
                                                     </a>
                                                 </li>
@@ -201,6 +211,27 @@
                     
                     $('#search-results').show();
                 }
+            });
+        </script>
+        <script>
+            $(document).on('click', '.template-link', function(e) {
+                e.preventDefault();
+                const studentId = $(this).data('student-id');
+                const href = $(this).attr('href');
+                
+                // Store student ID in session via AJAX
+                $.ajax({
+                    url: '{% url "store_student_session" %}',
+                    method: 'POST',
+                    data: {
+                        'student_id': studentId,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function() {
+                        // Redirect to the form page after successful session storage
+                        window.location.href = href;
+                    }
+                });
             });
         </script>
     </body>
