@@ -5,7 +5,7 @@ from docxtpl import DocxTemplate
 import os
 import time
 import shutil
-from ..models import ReportTemplate, Purpose, User, Profile, Course
+from ..models import ReportTemplate, Purpose, User, Profile, Course, Record
 from datetime import datetime
 import io
 import tempfile
@@ -36,57 +36,97 @@ def admin_search_student(request):
         Q(middle_name__icontains=query)
     ).select_related('user', 'course')
     
-    # Combine the results
+    # Create a list to hold all user results
     results = []
-    
-    # Add results from user search - ensure all users are processed consistently
     processed_user_ids = set()
     
+    # Process users found directly from User search
     for user in user_results:
+        if user.id in processed_user_ids:
+            continue
+            
         processed_user_ids.add(user.id)
+        user_data = {
+            'id': user.id,
+            'student_number': user.student_number or '',
+            'email': user.email or '',
+            'user_type': user.get_user_type_display() if hasattr(user, 'get_user_type_display') else '',
+        }
+        
+        # First try to get user info from Record model
         try:
-            # Try to get the associated profile
-            profile = Profile.objects.get(user=user)
-            results.append({
-                'id': user.id,
-                'student_number': user.student_number or '',
-                'email': user.email or '',
-                'first_name': profile.first_name or '',
-                'middle_name': profile.middle_name or '',
-                'last_name': profile.last_name or '',
-                'contact_no': profile.contact_no or '',
-                'entry_year_from': profile.entry_year_from or '',
-                'entry_year_to': profile.entry_year_to or '',
-                'course_code': profile.course.code if profile.course else '',
-                'course_description': profile.course.description if profile.course else '',
+            record = Record.objects.get(user_number=user.student_number)
+            user_data.update({
+                'first_name': record.first_name or '',
+                'middle_name': record.middle_name or '',
+                'last_name': record.last_name or '',
+                'contact_no': record.contact_no or '',
+                'entry_year_from': record.entry_year_from or '',
+                'entry_year_to': record.entry_year_to or '',
+                'course_code': record.course_code or '',
+                'course_description': '', # Record might not have course description
             })
-        except Profile.DoesNotExist:
-            # User without profile - provide consistent structure with empty values
-            results.append({
-                'id': user.id,
-                'student_number': user.student_number or '',
-                'email': user.email or '',
-                'first_name': '',
-                'middle_name': '',
-                'last_name': '',
-                'contact_no': '',
-                'entry_year_from': '',
-                'entry_year_to': '',
-                'course_code': '',
-                'course_description': '',
-                'no_profile': True  # Flag to indicate this user has no profile
-            })
+        except Record.DoesNotExist:
+            # If no record, try to get from Profile
+            try:
+                profile = Profile.objects.get(user=user)
+                user_data.update({
+                    'first_name': profile.first_name or '',
+                    'middle_name': profile.middle_name or '',
+                    'last_name': profile.last_name or '',
+                    'contact_no': profile.contact_no or '',
+                    'entry_year_from': profile.entry_year_from or '',
+                    'entry_year_to': profile.entry_year_to or '',
+                    'course_code': profile.course.code if profile.course else '',
+                    'course_description': profile.course.description if profile.course else '',
+                })
+            except Profile.DoesNotExist:
+                # No profile found, set empty values
+                user_data.update({
+                    'first_name': '',
+                    'middle_name': '',
+                    'last_name': '',
+                    'contact_no': '',
+                    'entry_year_from': '',
+                    'entry_year_to': '',
+                    'course_code': '',
+                    'course_description': '',
+                })
+            
+        results.append(user_data)
     
-    # Add results from profile search (if not already added)
+    # Process profiles found from Profile search
     for profile in profile_results:
-        user_id = profile.user.id
-        # Check if this user is already in results
-        if user_id not in processed_user_ids:
-            processed_user_ids.add(user_id)
+        user = profile.user
+        if user.id in processed_user_ids:
+            continue
+            
+        processed_user_ids.add(user.id)
+        
+        # First check if user has a record
+        try:
+            record = Record.objects.get(user_number=user.student_number)
             results.append({
-                'id': user_id,
-                'student_number': profile.user.student_number or '',
-                'email': profile.user.email or '',
+                'id': user.id,
+                'student_number': user.student_number or '',
+                'email': user.email or '',
+                'user_type': user.get_user_type_display() if hasattr(user, 'get_user_type_display') else '',
+                'first_name': record.first_name or '',
+                'middle_name': record.middle_name or '',
+                'last_name': record.last_name or '',
+                'contact_no': record.contact_no or '',
+                'entry_year_from': record.entry_year_from or '',
+                'entry_year_to': record.entry_year_to or '',
+                'course_code': record.course_code or '',
+                'course_description': '', # Record might not have course description
+            })
+        except Record.DoesNotExist:
+            # If no record exists, use profile data
+            results.append({
+                'id': user.id,
+                'student_number': user.student_number or '',
+                'email': user.email or '',
+                'user_type': user.get_user_type_display() if hasattr(user, 'get_user_type_display') else '',
                 'first_name': profile.first_name or '',
                 'middle_name': profile.middle_name or '',
                 'last_name': profile.last_name or '',
