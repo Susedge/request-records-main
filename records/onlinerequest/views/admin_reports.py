@@ -369,8 +369,8 @@ def admin_generate_report_pdf(request, template_id):
     first_name = request.POST.get('first_name', '')
     last_name = request.POST.get('last_name', '')
     middle_name = request.POST.get('middle_name', '')
-    suffix = request.POST.get('suffix', '')  # Get the suffix value
-    output_format = request.POST.get('output_format', 'docx')  # Get selected format
+    suffix = request.POST.get('suffix', '')
+    output_format = request.POST.get('output_format', 'docx')
     
     # Construct full name with suffix if present
     full_name = f"{first_name} {middle_name} {last_name}"
@@ -381,7 +381,7 @@ def admin_generate_report_pdf(request, template_id):
         'first_name': first_name,
         'last_name': last_name,
         'middle_name': middle_name,
-        'suffix': suffix,  # Add suffix to the template variables
+        'suffix': suffix,
         'full_name': full_name,
         'contact_no': request.POST.get('contact_no', ''),
         'entry_year_from': request.POST.get('entry_year_from', ''),
@@ -405,8 +405,23 @@ def admin_generate_report_pdf(request, template_id):
         
         docx_path = os.path.join(generated_dir, f"{safe_name}.docx")
         
+        # Verify template file exists
+        template_path = template.template_file.path
+        if not os.path.exists(template_path):
+            # Try to find the template relative to MEDIA_ROOT
+            alt_path = os.path.join(settings.MEDIA_ROOT, str(template.template_file))
+            if os.path.exists(alt_path):
+                template_path = alt_path
+            else:
+                # Last resort - check if we can access it through the URL
+                if template.template_file.url and hasattr(template.template_file, 'file'):
+                    template_path = template.template_file.file.name
+                else:
+                    raise FileNotFoundError(f"Template file not found at {template_path}")
+        
         # Process document using docxtpl for better template handling
-        doc_template = DocxTemplate(template.template_file.path)
+        print(f"Using template file from: {template_path}")
+        doc_template = DocxTemplate(template_path)
         doc_template.render(field_mapping)
         doc_template.save(docx_path)
         
@@ -452,4 +467,7 @@ def admin_generate_report_pdf(request, template_id):
         return response
                 
     except Exception as e:
-        raise Http404(f"Error generating document: {str(e)}")
+        import traceback
+        error_msg = f"Error generating document: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
+        raise Http404(error_msg)
