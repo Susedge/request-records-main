@@ -3,12 +3,24 @@ from django.http import FileResponse, Http404, JsonResponse
 from django.conf import settings
 from docxtpl import DocxTemplate
 import os
-import time
+import subprocess
 import shutil
-from ..models import ReportTemplate, Purpose, User, Profile, Course
+import requests
+import json
+from ..models import ReportTemplate, Purpose, User, Course, Profile
 from datetime import datetime
+import time
+import io
+import tempfile
 from django.utils.text import slugify
+from docx2python import docx2python
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
 from django.db.models import Q
+
 
 def admin_reports(request):
     templates = ReportTemplate.objects.all()
@@ -31,46 +43,6 @@ def search_students(request):
     student_list = list(students)
     
     return JsonResponse({'students': student_list})
-
-def store_student_session(request):
-    student_id = request.POST.get('student_id')
-    if student_id:
-        try:
-            # Get student user object
-            student_user = User.objects.get(id=student_id)
-            
-            # Store student data in session
-            request.session['admin_form_student_id'] = student_id
-            request.session['admin_form_student_number'] = student_user.student_number
-            request.session['admin_form_email'] = student_user.email
-            
-            # Get student profile if exists
-            try:
-                profile = Profile.objects.get(user=student_user)
-                request.session['admin_form_first_name'] = profile.first_name
-                request.session['admin_form_last_name'] = profile.last_name
-                request.session['admin_form_middle_name'] = profile.middle_name
-                request.session['admin_form_suffix'] = getattr(profile, 'suffix', '')
-                request.session['admin_form_contact_no'] = profile.contact_no
-                request.session['admin_form_entry_year_from'] = profile.entry_year_from
-                request.session['admin_form_entry_year_to'] = profile.entry_year_to
-                request.session['admin_form_course'] = profile.course.code if profile.course else ''
-            except Profile.DoesNotExist:
-                pass
-                
-            return JsonResponse({'status': 'success'})
-        except User.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Student not found'}, status=404)
-    
-    return JsonResponse({'status': 'error', 'message': 'No student ID provided'}, status=400)
-
-def clear_student_session(request):
-    # Clear all admin form session data
-    for key in list(request.session.keys()):
-        if key.startswith('admin_form_'):
-            del request.session[key]
-    
-    return JsonResponse({'status': 'success'})
 
 def admin_report_form(request, template_id):
     template = get_object_or_404(ReportTemplate, id=template_id)
@@ -118,6 +90,46 @@ def admin_report_form(request, template_id):
         'all_courses': all_courses,
         'student_data': student_data
     })
+
+def store_student_session(request):
+    student_id = request.POST.get('student_id')
+    if student_id:
+        try:
+            # Get student user object
+            student_user = User.objects.get(id=student_id)
+            
+            # Store student data in session
+            request.session['admin_form_student_id'] = student_id
+            request.session['admin_form_student_number'] = student_user.student_number
+            request.session['admin_form_email'] = student_user.email
+            
+            # Get student profile if exists
+            try:
+                profile = Profile.objects.get(user=student_user)
+                request.session['admin_form_first_name'] = profile.first_name
+                request.session['admin_form_last_name'] = profile.last_name
+                request.session['admin_form_middle_name'] = profile.middle_name
+                request.session['admin_form_suffix'] = getattr(profile, 'suffix', '')
+                request.session['admin_form_contact_no'] = profile.contact_no
+                request.session['admin_form_entry_year_from'] = profile.entry_year_from
+                request.session['admin_form_entry_year_to'] = profile.entry_year_to
+                request.session['admin_form_course'] = profile.course.code if profile.course else ''
+            except Profile.DoesNotExist:
+                pass
+                
+            return JsonResponse({'status': 'success'})
+        except User.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Student not found'}, status=404)
+    
+    return JsonResponse({'status': 'error', 'message': 'No student ID provided'}, status=400)
+
+def clear_student_session(request):
+    # Clear all admin form session data
+    for key in list(request.session.keys()):
+        if key.startswith('admin_form_'):
+            del request.session[key]
+    
+    return JsonResponse({'status': 'success'})
 
 def convert_with_pylovepdf(docx_path, pdf_path):
     """
@@ -235,8 +247,17 @@ def admin_generate_report_pdf(request, template_id):
         
         docx_path = os.path.join(generated_dir, f"{safe_name}.docx")
         
-        # Process document using docxtpl
-        doc_template = DocxTemplate(template.template_file.path)
+        # Fix the template file path
+        template_path = template.template_file.path
+        
+        # Check if the path is missing "records/" and fix it
+        if '/reports/templates/' in template_path and not os.path.exists(template_path):
+            corrected_path = template_path.replace('/reports/templates/', '/records/reports/templates/')
+            if os.path.exists(corrected_path):
+                template_path = corrected_path
+        
+        # Use the corrected path
+        doc_template = DocxTemplate(template_path)
         doc_template.render(field_mapping)
         doc_template.save(docx_path)
         
@@ -244,12 +265,27 @@ def admin_generate_report_pdf(request, template_id):
         if output_format == 'pdf':
             pdf_path = os.path.join(generated_dir, f"{safe_name}.pdf")
             
-            # Use PyLovePDF for conversion
+            # Only use PyLovePDF for conversion
             print(f"Starting PDF conversion with PyLovePDF...")
             if not convert_with_pylovepdf(docx_path, pdf_path):
                 raise Exception("PyLovePDF conversion failed. Check logs for details.")
             
             print(f"PDF conversion completed successfully.")
+            print(f"Output PDF path: {pdf_path}")
+            print(f"PDF exists: {os.path.exists(pdf_path)}")
+            
+            # After conversion
+            if not os.path.exists(pdf_path):
+                print(f"Critical: PDF not found at {pdf_path} after conversion")
+                print(f"Generated dir contents: {os.listdir(generated_dir)}")
+            else:
+                try:
+                    # Check file is readable
+                    with open(pdf_path, 'rb') as f:
+                        first_bytes = f.read(100)
+                        print(f"PDF file can be opened and read ({len(first_bytes)} bytes read)")
+                except Exception as open_error:
+                    print(f"Error opening PDF file: {str(open_error)}")
             
             # Serve the PDF
             output_filename = f"{safe_name}.pdf"
