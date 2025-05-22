@@ -71,7 +71,7 @@ function updateProcessingTimes(times) {
         <div class="alert alert-${t.status === 'completed' ? 'success' : 'warning'} mb-2">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <strong>Request #${t.request_id}</strong>: ${t.days} days, ${t.hours} hours
+                    <strong>Request #${t.request_id}</strong>: ${t.days} days, ${t.hours} hours, ${t.minutes} mins
                 </div>
                 <span class="badge bg-${t.status === 'completed' ? 'success' : 'warning'}">
                     ${t.status}
