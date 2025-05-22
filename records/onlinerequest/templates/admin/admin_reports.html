@@ -119,97 +119,96 @@
         <!-- Add JavaScript for search functionality -->
         <script>
             $(document).ready(function() {
-                var selectedStudentData = null;
+                // Load all users when page loads
+                loadAllUsers();
                 
+                // Search functionality
                 $('#searchButton').click(function() {
-                    performSearch();
+                    searchStudents();
                 });
                 
                 $('#studentSearch').keypress(function(e) {
                     if(e.which == 13) { // Enter key
-                        performSearch();
+                        searchStudents();
                     }
                 });
                 
-                function showToast(message, success = true) {
-                    Toastify({
-                        text: message,
-                        duration: 5000,
-                        gravity: "top",
-                        position: "right",
-                        backgroundColor: success ? "#5cb85c" : "#d9534f",
-                        stopOnFocus: true,
-                        close: true
-                    }).showToast();
+                function loadAllUsers() {
+                    // Show loading indicator
+                    $('#resultsBody').html('<tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading users...</td></tr>');
+                    $('#searchResults').show();
+                    
+                    $.ajax({
+                        url: "{% url 'admin_search_student' %}",
+                        data: { 'query': '' },  // Empty query will return all users
+                        dataType: 'json',
+                        success: function(data) {
+                            displaySearchResults(data);
+                        },
+                        error: function(xhr, status, error) {
+                            $('#resultsBody').html('<tr><td colspan="4" class="text-center text-danger">Error loading users. Please try again.</td></tr>');
+                        }
+                    });
                 }
                 
-                function performSearch() {
-                    const searchQuery = $('#studentSearch').val().trim();
-                    if (!searchQuery) return;
+                function searchStudents() {
+                    const query = $('#studentSearch').val();
                     
                     // Show loading indicator
                     $('#resultsBody').html('<tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Searching...</td></tr>');
                     $('#searchResults').show();
-                    $('#noResults').hide();
                     
                     $.ajax({
                         url: "{% url 'admin_search_student' %}",
-                        data: {
-                            'query': searchQuery
-                        },
+                        data: { 'query': query },
                         dataType: 'json',
                         success: function(data) {
-                            $('#resultsBody').empty();
-                            
-                            if (data.length === 0) {
-                                $('#searchResults').hide();
-                                $('#noResults').show();
-                            } else {
-                                data.forEach(function(student) {
-                                    const fullName = `${student.first_name} ${student.middle_name} ${student.last_name}`.trim();
-                                    const row = `
-                                        <tr data-student='${JSON.stringify(student)}'>
-                                            <td>${student.student_number || ''}</td>
-                                            <td>${fullName}</td>
-                                            <td>${student.course_code || ''}</td>
-                                            <td>
-                                                <button class="btn btn-sm btn-success select-student">
-                                                    <i class="fas fa-check"></i> Select
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    `;
-                                    $('#resultsBody').append(row);
-                                });
-                                
-                                $('#searchResults').show();
-                                $('#noResults').hide();
-                                
-                                // Add click handler for select buttons
-                                $('.select-student').click(function() {
-                                    selectedStudentData = $(this).closest('tr').data('student');
-                                    
-                                    // When a student is selected, modify the template links to include the student data
-                                    $('.template-link').each(function() {
-                                        const originalHref = $(this).attr('href');
-                                        const separator = originalHref.includes('?') ? '&' : '?';
-                                        $(this).attr('href', `${originalHref}${separator}student_id=${selectedStudentData.id}`);
-                                    });
-                                    
-                                    // Visual feedback
-                                    $('#resultsBody tr').removeClass('table-success');
-                                    $(this).closest('tr').addClass('table-success');
-                                    
-                                    // Show notification using Toastify instead of alert
-                                    showToast('Student selected! Click on any "Fill Form" button to use this student\'s information.', true);
-                                });
-                            }
+                            displaySearchResults(data);
                         },
-                        error: function() {
-                            $('#resultsBody').html('<tr><td colspan="4" class="text-danger">Error occurred while searching. Please try again.</td></tr>');
-                            showToast('Error occurred while searching. Please try again.', false);
+                        error: function(xhr, status, error) {
+                            $('#resultsBody').html('<tr><td colspan="4" class="text-center text-danger">Error searching for students: ' + error + '</td></tr>');
                         }
                     });
+                }
+                
+                function displaySearchResults(data) {
+                    const resultsBody = $('#resultsBody');
+                    resultsBody.empty();
+                    
+                    if (data.length === 0) {
+                        resultsBody.append('<tr><td colspan="4" class="text-center">No students found</td></tr>');
+                    } else {
+                        data.forEach(function(student) {
+                            const fullName = `${student.first_name} ${student.middle_name} ${student.last_name}`.trim();
+                            let row = `<tr class="student-row">
+                                <td>${student.student_number || ''}</td>
+                                <td>${fullName || student.email}</td>
+                                <td>${student.course_code || ''}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <div class="dropdown me-2">
+                                            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" 
+                                                    id="dropdownMenuButton${student.id}" data-bs-toggle="dropdown" 
+                                                    aria-expanded="false">
+                                                Fill Form With Template
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton${student.id}">
+                                                {% for template in templates %}
+                                                <li>
+                                                    <a class="dropdown-item" 
+                                                       href="{% url 'admin_report_form' template.id %}?student_id=${student.id}">
+                                                       {{ template.name }}
+                                                    </a>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>`;
+                            resultsBody.append(row);
+                        });
+                    }
                 }
             });
         </script>

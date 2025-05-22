@@ -20,9 +20,46 @@ def admin_search_student(request):
     """Search for students by name or student number"""
     query = request.GET.get('query', '').strip()
     
+    # If query is empty, return all users instead of an empty array
     if not query:
-        return JsonResponse([], safe=False)
+        # Get all users with profiles
+        users = User.objects.all()[:50]  # Limit to 50 to prevent performance issues
+        results = []
+        
+        for user in users:
+            try:
+                profile = Profile.objects.get(user=user)
+                results.append({
+                    'id': user.id,
+                    'student_number': user.student_number,
+                    'email': user.email,
+                    'first_name': profile.first_name,
+                    'middle_name': profile.middle_name,
+                    'last_name': profile.last_name,
+                    'contact_no': profile.contact_no,
+                    'entry_year_from': profile.entry_year_from,
+                    'entry_year_to': profile.entry_year_to,
+                    'course_code': profile.course.code if profile.course else '',
+                    'course_description': profile.course.description if profile.course else '',
+                })
+            except Profile.DoesNotExist:
+                results.append({
+                    'id': user.id,
+                    'student_number': user.student_number,
+                    'email': user.email,
+                    'first_name': '',
+                    'middle_name': '',
+                    'last_name': '',
+                    'contact_no': '',
+                    'entry_year_from': '',
+                    'entry_year_to': '',
+                    'course_code': '',
+                    'course_description': '',
+                })
+        
+        return JsonResponse(results, safe=False)
     
+    # Rest of the original function remains the same for when there is a query
     # Search in User model for student number or email
     user_results = User.objects.filter(
         Q(student_number__icontains=query) | 
