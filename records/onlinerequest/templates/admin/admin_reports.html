@@ -175,7 +175,7 @@
                                         <tr data-student='${JSON.stringify(student)}'>
                                             <td>${student.student_number || ''}</td>
                                             <td>${fullName}</td>
-                                            <td>${student.course_code || ''}</td>
+                                            <td>${student.course_code || student.course || ''}</td>
                                             <td>
                                                 <button class="btn btn-sm btn-success select-student">
                                                     <i class="fas fa-check"></i> Select
@@ -195,19 +195,18 @@
                                     
                                     // When a student is selected, modify the template links to include the student data
                                     $('.template-link').each(function() {
-                                        const originalHref = $(this).attr('href');
-                                        const separator = originalHref.includes('?') ? '&' : '?';
-                                        $(this).attr('href', `${originalHref}${separator}student_id=${selectedStudentData.id}`);
+                                        const originalHref = $(this).attr('href').split('?')[0]; // Get base URL without parameters
+                                        $(this).attr('href', `${originalHref}?student_id=${selectedStudentData.id}`);
                                     });
                                     
                                     // Visual feedback
                                     $('#resultsBody tr').removeClass('table-success');
                                     $(this).closest('tr').addClass('table-success');
                                     
-                                    // Adjust notification based on whether user has profile
-                                    const hasProfile = selectedStudentData.first_name || selectedStudentData.last_name;
-                                    if (!hasProfile) {
-                                        showToast('Student selected! Note: This user has no profile data. You\'ll need to enter personal information manually.', true);
+                                    // Adjust notification based on data completeness
+                                    const hasName = selectedStudentData.first_name || selectedStudentData.last_name;
+                                    if (!hasName) {
+                                        showToast('Student selected! Note: This user has limited data. You\'ll need to enter missing information manually.', true);
                                     } else {
                                         showToast('Student selected! Click on any "Fill Form" button to use this student\'s information.', true);
                                     }

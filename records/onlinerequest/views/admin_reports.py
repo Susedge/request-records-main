@@ -36,9 +36,18 @@ def admin_search_student(request):
         Q(middle_name__icontains=query)
     ).select_related('user', 'course')
     
+    # Search in Record model for names
+    record_results = Record.objects.filter(
+        Q(first_name__icontains=query) | 
+        Q(last_name__icontains=query) |
+        Q(middle_name__icontains=query) |
+        Q(user_number__icontains=query)
+    )
+    
     # Create a list to hold all user results
     results = []
     processed_user_ids = set()
+    processed_user_numbers = set()
     
     # Process users found directly from User search
     for user in user_results:
@@ -46,6 +55,9 @@ def admin_search_student(request):
             continue
             
         processed_user_ids.add(user.id)
+        if user.student_number:
+            processed_user_numbers.add(user.student_number)
+            
         user_data = {
             'id': user.id,
             'student_number': user.student_number or '',
@@ -63,8 +75,10 @@ def admin_search_student(request):
                 'contact_no': record.contact_no or '',
                 'entry_year_from': record.entry_year_from or '',
                 'entry_year_to': record.entry_year_to or '',
+                'course': record.course_code or '',  # Changed to 'course' to match the form field
                 'course_code': record.course_code or '',
                 'course_description': '', # Record might not have course description
+                'suffix': '',  # Add empty suffix field
             })
         except Record.DoesNotExist:
             # If no record, try to get from Profile
@@ -77,8 +91,10 @@ def admin_search_student(request):
                     'contact_no': profile.contact_no or '',
                     'entry_year_from': profile.entry_year_from or '',
                     'entry_year_to': profile.entry_year_to or '',
+                    'course': profile.course.code if profile.course else '',  # Changed to 'course'
                     'course_code': profile.course.code if profile.course else '',
                     'course_description': profile.course.description if profile.course else '',
+                    'suffix': '',  # Add empty suffix field
                 })
             except Profile.DoesNotExist:
                 # No profile found, set empty values
@@ -89,8 +105,10 @@ def admin_search_student(request):
                     'contact_no': '',
                     'entry_year_from': '',
                     'entry_year_to': '',
+                    'course': '',  # Changed to 'course'
                     'course_code': '',
                     'course_description': '',
+                    'suffix': '',  # Add empty suffix field
                 })
             
         results.append(user_data)
@@ -102,6 +120,8 @@ def admin_search_student(request):
             continue
             
         processed_user_ids.add(user.id)
+        if user.student_number:
+            processed_user_numbers.add(user.student_number)
         
         # First check if user has a record
         try:
@@ -117,8 +137,10 @@ def admin_search_student(request):
                 'contact_no': record.contact_no or '',
                 'entry_year_from': record.entry_year_from or '',
                 'entry_year_to': record.entry_year_to or '',
+                'course': record.course_code or '',  # Changed to 'course'
                 'course_code': record.course_code or '',
                 'course_description': '', # Record might not have course description
+                'suffix': '',  # Add empty suffix field
             })
         except Record.DoesNotExist:
             # If no record exists, use profile data
@@ -133,8 +155,62 @@ def admin_search_student(request):
                 'contact_no': profile.contact_no or '',
                 'entry_year_from': profile.entry_year_from or '',
                 'entry_year_to': profile.entry_year_to or '',
+                'course': profile.course.code if profile.course else '',  # Changed to 'course'
                 'course_code': profile.course.code if profile.course else '',
                 'course_description': profile.course.description if profile.course else '',
+                'suffix': '',  # Add empty suffix field
+            })
+    
+    # Process records where we may not have a matching user
+    for record in record_results:
+        if record.user_number in processed_user_numbers:
+            continue  # Skip if we already processed this user
+            
+        processed_user_numbers.add(record.user_number)
+        
+        # Try to find the corresponding user
+        try:
+            user = User.objects.get(student_number=record.user_number)
+            if user.id in processed_user_ids:
+                continue  # Skip if we already processed this user
+                
+            processed_user_ids.add(user.id)
+            
+            results.append({
+                'id': user.id,
+                'student_number': user.student_number or '',
+                'email': user.email or '',
+                'user_type': user.get_user_type_display() if hasattr(user, 'get_user_type_display') else '',
+                'first_name': record.first_name or '',
+                'middle_name': record.middle_name or '',
+                'last_name': record.last_name or '',
+                'contact_no': record.contact_no or '',
+                'entry_year_from': record.entry_year_from or '',
+                'entry_year_to': record.entry_year_to or '',
+                'course': record.course_code or '',  # Changed to 'course'
+                'course_code': record.course_code or '',
+                'course_description': '', # Record might not have course description
+                'suffix': '',  # Add empty suffix field
+            })
+        except User.DoesNotExist:
+            # This record doesn't have a matching user account
+            # We could still include it with a placeholder user ID
+            results.append({
+                'id': 0,  # Placeholder ID
+                'student_number': record.user_number or '',
+                'email': '',
+                'user_type': 'Unknown',
+                'first_name': record.first_name or '',
+                'middle_name': record.middle_name or '',
+                'last_name': record.last_name or '',
+                'contact_no': record.contact_no or '',
+                'entry_year_from': record.entry_year_from or '',
+                'entry_year_to': record.entry_year_to or '',
+                'course': record.course_code or '',  # Changed to 'course'
+                'course_code': record.course_code or '',
+                'course_description': '', # Record might not have course description
+                'suffix': '',  # Add empty suffix field
+                'record_only': True  # Flag to indicate this is only from record
             })
     
     return JsonResponse(results, safe=False)
@@ -155,34 +231,52 @@ def admin_report_form(request, template_id):
             student_data = {
                 'student_number': user.student_number or '',
                 'email': user.email or '',
-                'user_type': user.get_user_type_display(),
+                'user_type': user.get_user_type_display() if hasattr(user, 'get_user_type_display') else '',
             }
             
+            # First try to get data from Record
             try:
-                profile = Profile.objects.get(user=user)
-                # Add profile data if available
+                record = Record.objects.get(user_number=user.student_number)
                 student_data.update({
-                    'first_name': profile.first_name or '',
-                    'middle_name': profile.middle_name or '',
-                    'last_name': profile.last_name or '',
-                    'contact_no': profile.contact_no or '',
-                    'entry_year_from': profile.entry_year_from or '',
-                    'entry_year_to': profile.entry_year_to or '',
-                    'course': profile.course.code if profile.course else '',
+                    'first_name': record.first_name or '',
+                    'middle_name': record.middle_name or '',
+                    'last_name': record.last_name or '',
+                    'suffix': '',  # Add empty suffix as it's not in Record model
+                    'contact_no': record.contact_no or '',
+                    'entry_year_from': record.entry_year_from or '',
+                    'entry_year_to': record.entry_year_to or '',
+                    'course': record.course_code or '',
                 })
-            except Profile.DoesNotExist:
-                # Set empty profile fields for consistent template rendering
-                student_data.update({
-                    'first_name': '',
-                    'middle_name': '',
-                    'last_name': '',
-                    'contact_no': '',
-                    'entry_year_from': '',
-                    'entry_year_to': '',
-                    'course': '',
-                })
+            except Record.DoesNotExist:
+                # If no record, try profile
+                try:
+                    profile = Profile.objects.get(user=user)
+                    # Add profile data if available
+                    student_data.update({
+                        'first_name': profile.first_name or '',
+                        'middle_name': profile.middle_name or '',
+                        'last_name': profile.last_name or '',
+                        'suffix': '',  # Add empty suffix as it might not be in Profile model
+                        'contact_no': profile.contact_no or '',
+                        'entry_year_from': profile.entry_year_from or '',
+                        'entry_year_to': profile.entry_year_to or '',
+                        'course': profile.course.code if profile.course else '',
+                    })
+                except Profile.DoesNotExist:
+                    # Set empty profile fields for consistent template rendering
+                    student_data.update({
+                        'first_name': '',
+                        'middle_name': '',
+                        'last_name': '',
+                        'suffix': '',
+                        'contact_no': '',
+                        'entry_year_from': '',
+                        'entry_year_to': '',
+                        'course': '',
+                    })
                 
         except User.DoesNotExist:
+            # If it's a record without a matching user (rare case)
             pass
     
     context = {
