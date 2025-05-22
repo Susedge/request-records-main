@@ -16,8 +16,7 @@ from onlinerequest.views import (
     admin_reports,
     qr_upload,
     user_request,
-    backup_views,
-    reports,
+    backup_views
 )
 
 from django.conf import settings
@@ -99,13 +98,15 @@ urlpatterns = [
     # Profile
     path('profile/', profile.index),
 
+    # Reports URLs
+    path('user/reports/', reports.index, name='reports'),
+    path('user/reports/generate/<int:template_id>/', reports.generate_pdf, name='generate_report_pdf'),
+
     # Admin report URLs
     path('admin-panel/reports/', admin_reports.admin_reports, name='admin_reports'),
+    path('admin-panel/reports/search-student/', admin_reports.admin_search_student, name='admin_search_student'),  # New endpoint for student search
     path('admin-panel/reports/form/<int:template_id>/', admin_reports.admin_report_form, name='admin_report_form'),
     path('admin-panel/reports/generate/<int:template_id>/', admin_reports.admin_generate_report_pdf, name='admin_generate_report_pdf'),
-    path('admin-panel/search-students/', admin_reports.search_students, name='search_students'),
-    path('admin-panel/reports/store-student-session/', admin_reports.store_student_session, name='store_student_session'),
-    path('admin-panel/reports/clear-student-session/', admin_reports.clear_student_session, name='clear_student_session'),
 
     # Admin Gcash upload
     path('admin-panel/qr-upload/', qr_upload.upload_qr_code, name='upload_qr_code'),
@@ -135,11 +136,6 @@ urlpatterns = [
     path('admin-panel/database-backups/download/<int:backup_id>/', backup_views.download_backup, name='download_backup'),
     path('admin-panel/database-backups/delete/<int:backup_id>/', backup_views.delete_backup, name='delete_backup'),
     path('admin-panel/database-backups/schedule/', backup_views.schedule_backup, name='schedule_backup'),
-    
-    # Add these to your urls.py patterns
-    path('reports/', reports.index, name='reports'),
-    path('reports/<int:template_id>/', reports.report_form, name='report_form'),
-    path('reports/generate/<int:template_id>/', reports.generate_report_pdf, name='generate_report_pdf'),
 ]
 
 if settings.DEBUG:

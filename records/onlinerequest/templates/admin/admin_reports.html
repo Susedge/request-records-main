@@ -10,32 +10,9 @@
         <meta name="author" content="" />
         <title>Admin Templates</title>
         {% include 'header.html' %}
-        <style>
-            .btn-primary {
-                background-color: #5a8a47;  /* Green color */
-                color: white;
-                /* Other styling */
-            }
-
-            .btn-primary:hover {
-                background-color: #4a7a3d;  /* Darker green */
-                /* Other styling */
-            }
-
-            .search-container {
-                background-color: #f8f9fa;
-                padding: 20px;
-                border-radius: 5px;
-                margin-bottom: 20px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-            .search-container .card {
-                margin-bottom: 0;
-            }
-            .student-row:hover {
-                background-color: #f5f5f5;
-            }
-        </style>
+        <!-- Include Toastify CSS and JS -->
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     </head>
 
     <body class="sb-nav-fixed">
@@ -49,43 +26,43 @@
                     <div class="container-fluid px-4">
                         <h1 class="mt-4">Template Management</h1>
                         
-                        <!-- Student Search Section - Moved to top and styled -->
-                        <div class="search-container">
-                            <div class="card">
-                                <div class="card-header bg-primary text-white">
-                                    <i class="fas fa-search me-1"></i>
-                                    Student Search
-                                </div>
-                                <div class="card-body">
-                                    <div class="row mb-3">
-                                        <div class="col-md-8">
-                                            <div class="input-group">
-                                                <input type="text" id="student-search" class="form-control" 
-                                                       placeholder="Search by name or student number..." autofocus>
-                                                <button class="btn btn-primary" id="search-button" type="button">
-                                                    <i class="fas fa-search"></i> Search
-                                                </button>
-                                            </div>
-                                            <small class="text-muted">Enter at least 2 characters to search</small>
+                        <!-- Student Search Form -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="fas fa-search me-1"></i>
+                                Search Student
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="input-group mb-3">
+                                            <input type="text" id="studentSearch" class="form-control" placeholder="Search by name or student number...">
+                                            <button class="btn btn-primary" type="button" id="searchButton">
+                                                <i class="fas fa-search"></i> Search
+                                            </button>
                                         </div>
                                     </div>
-                                    
-                                    <div id="search-results" class="mt-3" style="display: none;">
-                                        <h5>Search Results</h5>
-                                        <table class="table table-hover" id="students-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Student Number</th>
-                                                    <th>Name</th>
-                                                    <th>Program</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="student-results-body">
-                                                <!-- Results will be populated here -->
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                </div>
+                                
+                                <div id="searchResults" class="mt-3" style="display:none;">
+                                    <h5>Search Results</h5>
+                                    <table class="table table-hover" id="resultsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Student Number</th>
+                                                <th>Name</th>
+                                                <th>Program</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="resultsBody">
+                                            <!-- Search results will be populated here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div id="noResults" class="alert alert-info mt-3" style="display:none;">
+                                    No students found matching your search criteria.
                                 </div>
                             </div>
                         </div>
@@ -110,7 +87,7 @@
                                             <td>{{ template.name }}</td>
                                             <td>{{ template.description }}</td>
                                             <td>
-                                                <a href="{% url 'admin_report_form' template.id %}" class="btn btn-primary btn-sm">
+                                                <a href="{% url 'admin_report_form' template.id %}" class="btn btn-primary btn-sm template-link">
                                                     Fill Form
                                                 </a>
                                             </td>
@@ -139,110 +116,101 @@
         
         {% include 'footer.html' %}
         
+        <!-- Add JavaScript for search functionality -->
         <script>
             $(document).ready(function() {
-                // Clear any stored student session data when loading the search page
-                $.ajax({
-                    url: '{% url "clear_student_session" %}',
-                    method: 'POST',
-                    data: {
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    }
+                var selectedStudentData = null;
+                
+                $('#searchButton').click(function() {
+                    performSearch();
                 });
                 
-                // Search functionality
-                $('#search-button').click(function() {
-                    searchStudents();
-                });
-                
-                $('#student-search').keypress(function(e) {
+                $('#studentSearch').keypress(function(e) {
                     if(e.which == 13) { // Enter key
-                        searchStudents();
+                        performSearch();
                     }
                 });
                 
-                function searchStudents() {
-                    const query = $('#student-search').val();
-                    if (query.length < 2) {
-                        alert('Please enter at least 2 characters to search');
-                        return;
-                    }
+                function showToast(message, success = true) {
+                    Toastify({
+                        text: message,
+                        duration: 5000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: success ? "#5cb85c" : "#d9534f",
+                        stopOnFocus: true,
+                        close: true
+                    }).showToast();
+                }
+                
+                function performSearch() {
+                    const searchQuery = $('#studentSearch').val().trim();
+                    if (!searchQuery) return;
+                    
+                    // Show loading indicator
+                    $('#resultsBody').html('<tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Searching...</td></tr>');
+                    $('#searchResults').show();
+                    $('#noResults').hide();
                     
                     $.ajax({
-                        url: '{% url "search_students" %}',
-                        data: { 'query': query },
+                        url: "{% url 'admin_search_student' %}",
+                        data: {
+                            'query': searchQuery
+                        },
                         dataType: 'json',
                         success: function(data) {
-                            displaySearchResults(data);
+                            $('#resultsBody').empty();
+                            
+                            if (data.length === 0) {
+                                $('#searchResults').hide();
+                                $('#noResults').show();
+                            } else {
+                                data.forEach(function(student) {
+                                    const fullName = `${student.first_name} ${student.middle_name} ${student.last_name}`.trim();
+                                    const row = `
+                                        <tr data-student='${JSON.stringify(student)}'>
+                                            <td>${student.student_number || ''}</td>
+                                            <td>${fullName}</td>
+                                            <td>${student.course_code || ''}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-success select-student">
+                                                    <i class="fas fa-check"></i> Select
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `;
+                                    $('#resultsBody').append(row);
+                                });
+                                
+                                $('#searchResults').show();
+                                $('#noResults').hide();
+                                
+                                // Add click handler for select buttons
+                                $('.select-student').click(function() {
+                                    selectedStudentData = $(this).closest('tr').data('student');
+                                    
+                                    // When a student is selected, modify the template links to include the student data
+                                    $('.template-link').each(function() {
+                                        const originalHref = $(this).attr('href');
+                                        const separator = originalHref.includes('?') ? '&' : '?';
+                                        $(this).attr('href', `${originalHref}${separator}student_id=${selectedStudentData.id}`);
+                                    });
+                                    
+                                    // Visual feedback
+                                    $('#resultsBody tr').removeClass('table-success');
+                                    $(this).closest('tr').addClass('table-success');
+                                    
+                                    // Show notification using Toastify instead of alert
+                                    showToast('Student selected! Click on any "Fill Form" button to use this student\'s information.', true);
+                                });
+                            }
                         },
-                        error: function(xhr, status, error) {
-                            alert('Error searching for students: ' + error);
+                        error: function() {
+                            $('#resultsBody').html('<tr><td colspan="4" class="text-danger">Error occurred while searching. Please try again.</td></tr>');
+                            showToast('Error occurred while searching. Please try again.', false);
                         }
                     });
                 }
-                
-                function displaySearchResults(data) {
-                    const resultsBody = $('#student-results-body');
-                    resultsBody.empty();
-                    
-                    if (data.students.length === 0) {
-                        resultsBody.append('<tr><td colspan="4" class="text-center">No students found</td></tr>');
-                    } else {
-                        data.students.forEach(function(student) {
-                            let row = `<tr class="student-row">
-                                <td>${student.student_number}</td>
-                                <td>${student.full_name}</td>
-                                <td>${student.course}</td>
-                                <td>
-                                    <div class="btn-group">
-                                        <div class="dropdown me-2">
-                                            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" 
-                                                    id="dropdownMenuButton${student.id}" data-bs-toggle="dropdown" 
-                                                    aria-expanded="false">
-                                                Fill Form With Template
-                                            </button>
-                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton${student.id}">
-                                                {% for template in templates %}
-                                                <li>
-                                                    <a class="dropdown-item template-link" 
-                                                       href="{% url 'admin_report_form' template.id %}" 
-                                                       data-student-id="${student.id}">
-                                                       {{ template.name }}
-                                                    </a>
-                                                </li>
-                                                {% endfor %}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>`;
-                            resultsBody.append(row);
-                        });
-                    }
-                    
-                    $('#search-results').show();
-                }
-            });
-        </script>
-        <script>
-            $(document).on('click', '.template-link', function(e) {
-                e.preventDefault();
-                const studentId = $(this).data('student-id');
-                const href = $(this).attr('href');
-                
-                // Store student ID in session via AJAX
-                $.ajax({
-                    url: '{% url "store_student_session" %}',
-                    method: 'POST',
-                    data: {
-                        'student_id': studentId,
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    success: function() {
-                        // Redirect to the form page after successful session storage
-                        window.location.href = href;
-                    }
-                });
             });
         </script>
     </body>

@@ -38,51 +38,49 @@
                                             <div class="col-md-6">
                                                 <div class="form-group mb-3 required-field">
                                                     <label for="first_name" class="form-label">First Name</label>
-                                                    <input type="text" class="form-control" id="first_name" name="first_name" value="{{ student_data.first_name }}" required>
+                                                    <input type="text" class="form-control" id="first_name" name="first_name" value="{{ student_data.first_name|default:'' }}" required>
                                                 </div>
                                                 <div class="form-group mb-3">
                                                     <label for="middle_name" class="form-label">Middle Name</label>
-                                                    <input type="text" class="form-control" id="middle_name" name="middle_name" value="{{ student_data.middle_name }}">
+                                                    <input type="text" class="form-control" id="middle_name" name="middle_name" value="{{ student_data.middle_name|default:'' }}">
                                                 </div>
                                                 <div class="form-group mb-3 required-field">
                                                     <label for="last_name" class="form-label">Last Name</label>
-                                                    <input type="text" class="form-control" id="last_name" name="last_name" value="{{ student_data.last_name }}" required>
+                                                    <input type="text" class="form-control" id="last_name" name="last_name" value="{{ student_data.last_name|default:'' }}" required>
                                                 </div>
                                                 <div class="form-group mb-3 required-field">
                                                     <label for="suffix" class="form-label">Suffix (Jr., Sr., etc.)</label>
-                                                    <input type="text" class="form-control" id="suffix" name="suffix" value="{{ student_data.suffix }}" placeholder="Optional">
+                                                    <input type="text" class="form-control" id="suffix" name="suffix" placeholder="Optional" value="{{ student_data.suffix|default:'' }}">
                                                 </div>
                                                 <div class="form-group mb-3">
                                                     <label for="contact_no" class="form-label">Contact Number</label>
                                                     <div class="input-group">
                                                         <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                                                        <input type="text" class="form-control" id="contact_no" name="contact_no" value="{{ student_data.contact_no }}" maxlength="11">
+                                                        <input type="text" class="form-control" id="contact_no" name="contact_no" value="{{ student_data.contact_no|default:'' }}">
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group mb-3">
                                                     <label for="entry_year_from" class="form-label">Entry Year (From)</label>
-                                                    <input type="text" class="form-control datepicker-input" id="entry_year_from" name="entry_year_from" value="{{ student_data.entry_year_from }}">
+                                                    <input type="text" class="form-control datepicker-input" id="entry_year_from" name="entry_year_from" value="{{ student_data.entry_year_from|default:'' }}">
                                                 </div>
                                                 <div class="form-group mb-3">
                                                     <label for="entry_year_to" class="form-label">Entry Year (To)</label>
-                                                    <input type="text" class="form-control datepicker-input" id="entry_year_to" name="entry_year_to" value="{{ student_data.entry_year_to }}">
+                                                    <input type="text" class="form-control datepicker-input" id="entry_year_to" name="entry_year_to" value="{{ student_data.entry_year_to|default:'' }}">
                                                 </div>
                                                 <div class="form-group mb-3">
                                                     <label for="course" class="form-label">Program</label>
                                                     <select class="form-select" id="course" name="course">
                                                         <option value="">Select Program</option>
                                                         {% for course in all_courses %}
-                                                            <option value="{{ course.code }}" {% if student_data.course == course.code %}selected{% endif %}>
-                                                                {{ course.code }} - {{ course.description }}
-                                                            </option>
+                                                            <option value="{{ course.code }}" {% if student_data.course == course.code %}selected{% endif %}>{{ course.code }} - {{ course.description }}</option>
                                                         {% endfor %}
                                                     </select>
                                                 </div>
                                                 <div class="form-group mb-3">
                                                     <label for="student_number" class="form-label">Student Number</label>
-                                                    <input type="text" class="form-control" id="student_number" name="student_number">
+                                                    <input type="text" class="form-control" id="student_number" name="student_number" value="{{ student_data.student_number|default:'' }}">
                                                 </div>
                                             </div>
                                         </div>
@@ -96,7 +94,7 @@
                                                     <label for="email" class="form-label">Email</label>
                                                     <div class="input-group">
                                                         <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                                                        <input type="email" class="form-control" id="email" name="email">
+                                                        <input type="email" class="form-control" id="email" name="email" value="{{ student_data.email|default:'' }}">
                                                     </div>
                                                 </div>
                                             </div>
