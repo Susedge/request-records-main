@@ -39,30 +39,33 @@ def admin_search_student(request):
     # Combine the results
     results = []
     
-    # Add results from user search
+    # Add results from user search - ensure all users are processed consistently
+    processed_user_ids = set()
+    
     for user in user_results:
+        processed_user_ids.add(user.id)
         try:
             # Try to get the associated profile
             profile = Profile.objects.get(user=user)
             results.append({
                 'id': user.id,
-                'student_number': user.student_number,
-                'email': user.email,
-                'first_name': profile.first_name,
-                'middle_name': profile.middle_name,
-                'last_name': profile.last_name,
-                'contact_no': profile.contact_no,
-                'entry_year_from': profile.entry_year_from,
-                'entry_year_to': profile.entry_year_to,
+                'student_number': user.student_number or '',
+                'email': user.email or '',
+                'first_name': profile.first_name or '',
+                'middle_name': profile.middle_name or '',
+                'last_name': profile.last_name or '',
+                'contact_no': profile.contact_no or '',
+                'entry_year_from': profile.entry_year_from or '',
+                'entry_year_to': profile.entry_year_to or '',
                 'course_code': profile.course.code if profile.course else '',
                 'course_description': profile.course.description if profile.course else '',
             })
         except Profile.DoesNotExist:
-            # User without profile
+            # User without profile - provide consistent structure with empty values
             results.append({
                 'id': user.id,
-                'student_number': user.student_number,
-                'email': user.email,
+                'student_number': user.student_number or '',
+                'email': user.email or '',
                 'first_name': '',
                 'middle_name': '',
                 'last_name': '',
@@ -71,23 +74,25 @@ def admin_search_student(request):
                 'entry_year_to': '',
                 'course_code': '',
                 'course_description': '',
+                'no_profile': True  # Flag to indicate this user has no profile
             })
     
     # Add results from profile search (if not already added)
     for profile in profile_results:
         user_id = profile.user.id
         # Check if this user is already in results
-        if not any(r['id'] == user_id for r in results):
+        if user_id not in processed_user_ids:
+            processed_user_ids.add(user_id)
             results.append({
                 'id': user_id,
-                'student_number': profile.user.student_number,
-                'email': profile.user.email,
-                'first_name': profile.first_name,
-                'middle_name': profile.middle_name,
-                'last_name': profile.last_name,
-                'contact_no': profile.contact_no,
-                'entry_year_from': profile.entry_year_from,
-                'entry_year_to': profile.entry_year_to,
+                'student_number': profile.user.student_number or '',
+                'email': profile.user.email or '',
+                'first_name': profile.first_name or '',
+                'middle_name': profile.middle_name or '',
+                'last_name': profile.last_name or '',
+                'contact_no': profile.contact_no or '',
+                'entry_year_from': profile.entry_year_from or '',
+                'entry_year_to': profile.entry_year_to or '',
                 'course_code': profile.course.code if profile.course else '',
                 'course_description': profile.course.description if profile.course else '',
             })
@@ -106,25 +111,37 @@ def admin_report_form(request, template_id):
     if student_id:
         try:
             user = User.objects.get(id=student_id)
+            # Always include user data
+            student_data = {
+                'student_number': user.student_number or '',
+                'email': user.email or '',
+                'user_type': user.get_user_type_display(),
+            }
+            
             try:
                 profile = Profile.objects.get(user=user)
-                student_data = {
-                    'student_number': user.student_number,
-                    'email': user.email,
-                    'first_name': profile.first_name,
-                    'middle_name': profile.middle_name,
-                    'last_name': profile.last_name,
-                    'contact_no': profile.contact_no,
-                    'entry_year_from': profile.entry_year_from,
-                    'entry_year_to': profile.entry_year_to,
+                # Add profile data if available
+                student_data.update({
+                    'first_name': profile.first_name or '',
+                    'middle_name': profile.middle_name or '',
+                    'last_name': profile.last_name or '',
+                    'contact_no': profile.contact_no or '',
+                    'entry_year_from': profile.entry_year_from or '',
+                    'entry_year_to': profile.entry_year_to or '',
                     'course': profile.course.code if profile.course else '',
-                }
+                })
             except Profile.DoesNotExist:
-                # Just include user data without profile
-                student_data = {
-                    'student_number': user.student_number,
-                    'email': user.email,
-                }
+                # Set empty profile fields for consistent template rendering
+                student_data.update({
+                    'first_name': '',
+                    'middle_name': '',
+                    'last_name': '',
+                    'contact_no': '',
+                    'entry_year_from': '',
+                    'entry_year_to': '',
+                    'course': '',
+                })
+                
         except User.DoesNotExist:
             pass
     

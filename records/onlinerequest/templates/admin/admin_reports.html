@@ -166,7 +166,11 @@
                                 $('#noResults').show();
                             } else {
                                 data.forEach(function(student) {
-                                    const fullName = `${student.first_name} ${student.middle_name} ${student.last_name}`.trim();
+                                    // Handle both users with and without profiles
+                                    const fullName = student.first_name || student.last_name ? 
+                                        `${student.first_name || ''} ${student.middle_name || ''} ${student.last_name || ''}`.trim() : 
+                                        'No profile data';
+                                        
                                     const row = `
                                         <tr data-student='${JSON.stringify(student)}'>
                                             <td>${student.student_number || ''}</td>
@@ -200,8 +204,13 @@
                                     $('#resultsBody tr').removeClass('table-success');
                                     $(this).closest('tr').addClass('table-success');
                                     
-                                    // Show notification using Toastify instead of alert
-                                    showToast('Student selected! Click on any "Fill Form" button to use this student\'s information.', true);
+                                    // Adjust notification based on whether user has profile
+                                    const hasProfile = selectedStudentData.first_name || selectedStudentData.last_name;
+                                    if (!hasProfile) {
+                                        showToast('Student selected! Note: This user has no profile data. You\'ll need to enter personal information manually.', true);
+                                    } else {
+                                        showToast('Student selected! Click on any "Fill Form" button to use this student\'s information.', true);
+                                    }
                                 });
                             }
                         },
