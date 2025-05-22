@@ -7,6 +7,8 @@ import time
 import shutil
 from ..models import ReportTemplate, Purpose, User, Profile, Course
 from datetime import datetime
+import io
+import tempfile
 from django.utils.text import slugify
 from django.db.models import Q
 
@@ -14,111 +16,128 @@ def admin_reports(request):
     templates = ReportTemplate.objects.all()
     return render(request, 'admin/admin_reports.html', {'templates': templates})
 
-def search_students(request):
-    query = request.GET.get('query', '')
+def admin_search_student(request):
+    """Search for students by name or student number"""
+    query = request.GET.get('query', '').strip()
     
-    if len(query) < 2:
-        return JsonResponse({'students': []})
+    if not query:
+        return JsonResponse([], safe=False)
     
-    # Search for students
-    students = User.objects.filter(
+    # Search in User model for student number or email
+    user_results = User.objects.filter(
         Q(student_number__icontains=query) | 
+        Q(email__icontains=query)
+    )
+    
+    # Search in Profile model for names
+    profile_results = Profile.objects.filter(
         Q(first_name__icontains=query) | 
-        Q(last_name__icontains=query)
-    ).values('id', 'student_number', 'email', 'first_name', 'last_name')
+        Q(last_name__icontains=query) |
+        Q(middle_name__icontains=query)
+    ).select_related('user', 'course')
     
-    # Convert to list for the response
-    student_list = list(students)
+    # Combine the results
+    results = []
     
-    return JsonResponse({'students': student_list})
-
-def store_student_session(request):
-    student_id = request.POST.get('student_id')
-    if student_id:
+    # Add results from user search
+    for user in user_results:
         try:
-            # Get student user object
-            student_user = User.objects.get(id=student_id)
-            
-            # Store student data in session
-            request.session['admin_form_student_id'] = student_id
-            request.session['admin_form_student_number'] = student_user.student_number
-            request.session['admin_form_email'] = student_user.email
-            
-            # Get student profile if exists
-            try:
-                profile = Profile.objects.get(user=student_user)
-                request.session['admin_form_first_name'] = profile.first_name
-                request.session['admin_form_last_name'] = profile.last_name
-                request.session['admin_form_middle_name'] = profile.middle_name
-                request.session['admin_form_suffix'] = getattr(profile, 'suffix', '')
-                request.session['admin_form_contact_no'] = profile.contact_no
-                request.session['admin_form_entry_year_from'] = profile.entry_year_from
-                request.session['admin_form_entry_year_to'] = profile.entry_year_to
-                request.session['admin_form_course'] = profile.course.code if profile.course else ''
-            except Profile.DoesNotExist:
-                pass
-                
-            return JsonResponse({'status': 'success'})
-        except User.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Student not found'}, status=404)
+            # Try to get the associated profile
+            profile = Profile.objects.get(user=user)
+            results.append({
+                'id': user.id,
+                'student_number': user.student_number,
+                'email': user.email,
+                'first_name': profile.first_name,
+                'middle_name': profile.middle_name,
+                'last_name': profile.last_name,
+                'contact_no': profile.contact_no,
+                'entry_year_from': profile.entry_year_from,
+                'entry_year_to': profile.entry_year_to,
+                'course_code': profile.course.code if profile.course else '',
+                'course_description': profile.course.description if profile.course else '',
+            })
+        except Profile.DoesNotExist:
+            # User without profile
+            results.append({
+                'id': user.id,
+                'student_number': user.student_number,
+                'email': user.email,
+                'first_name': '',
+                'middle_name': '',
+                'last_name': '',
+                'contact_no': '',
+                'entry_year_from': '',
+                'entry_year_to': '',
+                'course_code': '',
+                'course_description': '',
+            })
     
-    return JsonResponse({'status': 'error', 'message': 'No student ID provided'}, status=400)
-
-def clear_student_session(request):
-    # Clear all admin form session data
-    for key in list(request.session.keys()):
-        if key.startswith('admin_form_'):
-            del request.session[key]
+    # Add results from profile search (if not already added)
+    for profile in profile_results:
+        user_id = profile.user.id
+        # Check if this user is already in results
+        if not any(r['id'] == user_id for r in results):
+            results.append({
+                'id': user_id,
+                'student_number': profile.user.student_number,
+                'email': profile.user.email,
+                'first_name': profile.first_name,
+                'middle_name': profile.middle_name,
+                'last_name': profile.last_name,
+                'contact_no': profile.contact_no,
+                'entry_year_from': profile.entry_year_from,
+                'entry_year_to': profile.entry_year_to,
+                'course_code': profile.course.code if profile.course else '',
+                'course_description': profile.course.description if profile.course else '',
+            })
     
-    return JsonResponse({'status': 'success'})
+    return JsonResponse(results, safe=False)
 
 def admin_report_form(request, template_id):
     template = get_object_or_404(ReportTemplate, id=template_id)
     purposes = Purpose.objects.filter(active=True)
     all_courses = Course.objects.all()
     
-    # Initialize empty student data
-    student_data = {
-        'first_name': '',
-        'last_name': '',
-        'middle_name': '',
-        'suffix': '',
-        'contact_no': '',
-        'entry_year_from': '',
-        'entry_year_to': '',
-        'course': '',
-        'student_number': '',
-        'email': '',
-    }
+    # Get student data if provided
+    student_data = {}
+    student_id = request.GET.get('student_id')
     
-    # Check if student data is in session
-    if 'admin_form_student_id' in request.session:
-        # Populate from session
-        student_data.update({
-            'first_name': request.session.get('admin_form_first_name', ''),
-            'last_name': request.session.get('admin_form_last_name', ''),
-            'middle_name': request.session.get('admin_form_middle_name', ''),
-            'suffix': request.session.get('admin_form_suffix', ''),
-            'contact_no': request.session.get('admin_form_contact_no', ''),
-            'entry_year_from': request.session.get('admin_form_entry_year_from', ''),
-            'entry_year_to': request.session.get('admin_form_entry_year_to', ''),
-            'course': request.session.get('admin_form_course', ''),
-            'student_number': request.session.get('admin_form_student_number', ''),
-            'email': request.session.get('admin_form_email', ''),
-        })
-        
-        # Clear the session data after retrieving it
-        for key in list(request.session.keys()):
-            if key.startswith('admin_form_'):
-                del request.session[key]
+    if student_id:
+        try:
+            user = User.objects.get(id=student_id)
+            try:
+                profile = Profile.objects.get(user=user)
+                student_data = {
+                    'student_number': user.student_number,
+                    'email': user.email,
+                    'first_name': profile.first_name,
+                    'middle_name': profile.middle_name,
+                    'last_name': profile.last_name,
+                    'contact_no': profile.contact_no,
+                    'entry_year_from': profile.entry_year_from,
+                    'entry_year_to': profile.entry_year_to,
+                    'course': profile.course.code if profile.course else '',
+                }
+            except Profile.DoesNotExist:
+                # Just include user data without profile
+                student_data = {
+                    'student_number': user.student_number,
+                    'email': user.email,
+                }
+        except User.DoesNotExist:
+            pass
     
-    return render(request, 'admin/report_form.html', {
+    context = {
         'template': template,
         'purposes': purposes,
         'all_courses': all_courses,
-        'student_data': student_data
-    })
+        'student_data': student_data,
+    }
+    
+    return render(request, 'admin/report_form.html', context)
 
+# Add the convert_with_pylovepdf function from admin_reports_old.py
 def convert_with_pylovepdf(docx_path, pdf_path):
     """
     Convert DOCX to PDF using the pylovepdf library
@@ -199,8 +218,8 @@ def admin_generate_report_pdf(request, template_id):
     first_name = request.POST.get('first_name', '')
     last_name = request.POST.get('last_name', '')
     middle_name = request.POST.get('middle_name', '')
-    suffix = request.POST.get('suffix', '')
-    output_format = request.POST.get('output_format', 'docx')
+    suffix = request.POST.get('suffix', '')  # Get the suffix value
+    output_format = request.POST.get('output_format', 'docx')  # Get selected format
     
     # Construct full name with suffix if present
     full_name = f"{first_name} {middle_name} {last_name}"
@@ -211,7 +230,7 @@ def admin_generate_report_pdf(request, template_id):
         'first_name': first_name,
         'last_name': last_name,
         'middle_name': middle_name,
-        'suffix': suffix,
+        'suffix': suffix,  # Add suffix to the template variables
         'full_name': full_name,
         'contact_no': request.POST.get('contact_no', ''),
         'entry_year_from': request.POST.get('entry_year_from', ''),
@@ -230,12 +249,12 @@ def admin_generate_report_pdf(request, template_id):
         
         # Ensure proper filename with extension
         safe_name = slugify(template.name)
-        if not safe_name:
+        if not safe_name:  # In case slugify removes all characters
             safe_name = "report"
         
         docx_path = os.path.join(generated_dir, f"{safe_name}.docx")
         
-        # Process document using docxtpl
+        # Process document using docxtpl for better template handling
         doc_template = DocxTemplate(template.template_file.path)
         doc_template.render(field_mapping)
         doc_template.save(docx_path)
@@ -244,7 +263,7 @@ def admin_generate_report_pdf(request, template_id):
         if output_format == 'pdf':
             pdf_path = os.path.join(generated_dir, f"{safe_name}.pdf")
             
-            # Use PyLovePDF for conversion
+            # Use PyLovePDF for conversion instead of docx2pdf
             print(f"Starting PDF conversion with PyLovePDF...")
             if not convert_with_pylovepdf(docx_path, pdf_path):
                 raise Exception("PyLovePDF conversion failed. Check logs for details.")
@@ -261,12 +280,12 @@ def admin_generate_report_pdf(request, template_id):
             # Set Content-Disposition header
             response['Content-Disposition'] = f'attachment; filename="{output_filename}"'
             
-            # Clean up files after streaming
+            # Clean up both files after streaming
             response._resource_closers.append(lambda: os.remove(docx_path))
             response._resource_closers.append(lambda: os.remove(pdf_path))
             
         else:
-            # Serve the DOCX file
+            # Serve the DOCX with explicit content disposition header
             output_filename = f"{safe_name}.docx"
             response = FileResponse(
                 open(docx_path, 'rb'),
