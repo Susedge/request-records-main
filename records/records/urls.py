@@ -16,7 +16,8 @@ from onlinerequest.views import (
     admin_reports,
     qr_upload,
     user_request,
-    backup_views
+    backup_views,
+    reports,
 )
 
 from django.conf import settings
@@ -99,8 +100,9 @@ urlpatterns = [
     path('profile/', profile.index),
 
     # Reports URLs
-    path('user/reports/', reports.index, name='reports'),
-    path('user/reports/generate/<int:template_id>/', reports.generate_pdf, name='generate_report_pdf'),
+    path('reports/', reports.index, name='reports'),
+    path('reports/<int:template_id>/', reports.report_form, name='report_form'),
+    path('reports/generate/<int:template_id>/', reports.generate_report_pdf, name='generate_report_pdf'),
 
     # Admin report URLs
     path('admin-panel/reports/', admin_reports.admin_reports, name='admin_reports'),
